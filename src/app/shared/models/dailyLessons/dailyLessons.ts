@@ -2,6 +2,7 @@
  * @description The diffrent types which are studied every day.
  */
 export enum DailyLessonType {
+    
     Chumash = "Chumash",
     Tanya = "Tanya",
     Rambam = "Rambam"
@@ -11,6 +12,7 @@ export enum DailyLessonType {
  * @description One lesson to learn.
  */
 export class Lesson {
+
     date:Date;
     url:string;
 }
@@ -19,17 +21,25 @@ export class Lesson {
  * @description A collection of daily lessons of one type.
  */
 export class DailyLessonTrack {
+
     type:DailyLessonType;
     title:string;
     days:Lesson[];
 }
 
 /**
- * @description All of the daily study information.
+ * @description Options to find a particular lessons/set of lessons.
  */
-export class DailyStudyLibrary {
-    tracks:DailyLessonTrack[];
+export class LessonQuery {
+    /**
+     * @description The offset from the current date. E.g: -1 is yesterday, 1 is
+     * tommorow.
+     * Or,the date which the lesson must occur on.
+     */
+    date?:number|Date;
 
-    getForDate(date:Date):any {
-    }
+    /**
+     * @description What the lesson is on.
+     */
+    type?:DailyLessonType;
 }

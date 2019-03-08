@@ -1,17 +1,24 @@
 import { Injectable } from '@angular/core';
-import { CurrentDailyLessons } from '../../models/dailyLessons';
+import {HttpClient} from '@angular/common/http';
+import { DailyStudyLibrary } from '../../models/dailyLessons';
+import { Observable } from 'rxjs';
+import Parser from 'rss-parser'
 
 @Injectable({
   providedIn: 'root'
 })
 export class DailyLessonServiceService {
+  private library:Observable<DailyStudyLibrary>;
 
-  constructor() { }
-  getCurrentLessons(): CurrentDailyLessons {
-
+  constructor(private httpClient:HttpClient) {
+    this.library = new Observable<DailyStudyLibrary>();
   }
 
-  _getLessons():DailyLesson {
+  getCurrentLessons():Observable<DailyStudyLibrary> {
+    parser.
+  }
+
+  _fetchLessons():DailyStudyLibrary {
     
   }
 }
