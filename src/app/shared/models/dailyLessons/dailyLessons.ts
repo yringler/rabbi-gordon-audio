@@ -2,29 +2,27 @@
  * @description The diffrent types which are studied every day.
  */
 export enum DailyLessonType {
-    
-    Chumash = "Chumash",
-    Tanya = "Tanya",
-    Rambam = "Rambam"
+	Chumash,
+	Tanya,
+	Rambam
 }
 
 /**
  * @description One lesson to learn.
  */
 export class Lesson {
-
-    date:Date;
-    url:string;
+	date: Date;
+	source: string;
+	title: string;
 }
 
 /**
  * @description A collection of daily lessons of one type.
  */
 export class DailyLessonTrack {
-
-    type:DailyLessonType;
-    title:string;
-    days:Lesson[];
+	type: DailyLessonType;
+	title: string;
+	days: Lesson[];
 }
 
 /**
@@ -36,10 +34,10 @@ export class LessonQuery {
      * tommorow.
      * Or,the date which the lesson must occur on.
      */
-    date?:number|Date;
+	date?: number | Date;
 
     /**
      * @description What the lesson is on.
      */
-    type?:DailyLessonType;
+	type?: DailyLessonType;
 }

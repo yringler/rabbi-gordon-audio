@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { DailyLessonServiceService } from './daily-lesson-service.service';
+import { DailyLessonServiceService } from './daily-lesson.service';
 
 describe('DailyLessonServiceService', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
