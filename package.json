@@ -26,7 +26,6 @@
         "nativescript-angular": "~7.2.1",
         "nativescript-theme-core": "~1.0.4",
         "reflect-metadata": "~0.1.12",
-        "rss-parser": "^3.6.3",
         "rxjs": "~6.3.0",
         "tns-core-modules": "~5.2.0",
         "zone.js": "~0.8.26"

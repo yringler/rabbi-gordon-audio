@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import { DailyStudyLibrary } from '../../models/dailyLessons';
+import { DailyStudyLibrary } from '../models/dailyLessons';
 import { Observable } from 'rxjs';
-import Parser from 'rss-parser'
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +14,6 @@ export class DailyLessonServiceService {
   }
 
   getCurrentLessons():Observable<DailyStudyLibrary> {
-    parser.
   }
 
   _fetchLessons():DailyStudyLibrary {
