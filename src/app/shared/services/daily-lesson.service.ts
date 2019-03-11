@@ -3,8 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { DailyStudyLibrary, DailyLessonTrack } from '../models/dailyLessons';
 import { Observable, from } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { knownFolders, Folder, File } from "tns-core-modules/file-system";
-import { stringify } from '@angular/core/src/util';
+import { knownFolders, File } from "tns-core-modules/file-system";
 
 const lessonApiUrl: string = 'lesson-api.herokuapp.com';
 
@@ -12,18 +11,26 @@ function getFile(): File {
 	return knownFolders.documents().getFile("json");
 }
 
+function parseJSON(json: string): DailyStudyLibrary {
+	return JSON.parse(json, (key, value) => {
+		return key == "date" ? new Date(value) : value;
+	});
+}
+
 function getFromFile(): DailyStudyLibrary {
 	try {
-		return JSON.parse(getFile().readTextSync());
+		return parseJSON(getFile().readTextSync());
 	}
 	catch {
 		return null;
 	}
 }
 
-function saveJson(json:string) {
+function saveJson(json: string) {
+	// Delete any old data.
 	getFile().removeSync();
-	
+
+	// Save the new data.
 	getFile().writeTextSync(json)
 }
 
@@ -64,7 +71,7 @@ export class DailyLessonServiceService {
 				return library;
 			}),
 			tap(library => this.library = library),
-			tap(library => saveJson(stringify(library)))
+			tap(library => saveJson(JSON.stringify(library)))
 		);
 	}
 	
