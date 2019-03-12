@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { DailyStudyLibrary, DailyLessonTrack } from '../models/dailyLessons';
-import { Observable, from } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { Observable, from, concat } from 'rxjs';
+import { map, tap, catchError } from 'rxjs/operators';
 import { knownFolders, File } from "tns-core-modules/file-system";
 
 const lessonApiUrl: string = 'lesson-api.herokuapp.com';
@@ -11,27 +11,32 @@ function getFile(): File {
 	return knownFolders.documents().getFile("json");
 }
 
-function parseJSON(json: string): DailyStudyLibrary {
-	return JSON.parse(json, (key, value) => {
+function parseLibrary(json: string): DailyStudyLibrary {
+	let tracks = JSON.parse(json, (key, value) => {
 		return key == "date" ? new Date(value) : value;
+	});
+
+	return new DailyStudyLibrary(tracks);
+}
+
+function getFromFile(): Observable<DailyStudyLibrary> {
+	return from(getFile().readText()).pipe(
+		map(json => parseLibrary(json))
+	)
+}
+
+function ensureHasDates(tracks: DailyLessonTrack[]): DailyLessonTrack[] {
+	return tracks.map(track => {
+		track.days.forEach(day => day.date = new Date(day.date));
+		return track;
 	});
 }
 
-function getFromFile(): DailyStudyLibrary {
-	try {
-		return parseJSON(getFile().readTextSync());
-	}
-	catch {
-		return null;
-	}
-}
-
 function saveJson(json: string) {
-	// Delete any old data.
-	getFile().removeSync();
-
-	// Save the new data.
-	getFile().writeTextSync(json)
+	return concat(
+		from(getFile().remove()),
+		from(getFile().writeText(json))
+	)
 }
 
 @Injectable({
@@ -50,29 +55,19 @@ export class DailyLessonServiceService {
 		}
 
 		// Try to load from file.
-		let library = getFromFile();
-
-		if (library) {
-			this.library = library;
-			return this.getLibrary();
-		}
-
-		// Download, cache to memory and file.
-		return this.http.get<DailyLessonTrack[]>(lessonApiUrl).pipe(
-			map(tracks => {
-				let tracksWithDates = tracks.map(track => {
-					track.days.forEach(day => day.date = new Date(day.date));
-					return track;
-				});
-
-				let library = new DailyStudyLibrary();
-				library.tracks = tracksWithDates;
-
-				return library;
-			}),
-			tap(library => this.library = library),
-			tap(library => saveJson(JSON.stringify(library)))
-		);
+		getFromFile().pipe(
+			// If that fails, load from network.
+			catchError(() => {
+				return this.http.get<DailyLessonTrack[]>(lessonApiUrl).pipe(
+					// Save it to file.
+					tap(tracks => saveJson(JSON.stringify(tracks))),
+					// Convert it to a library.
+					map(tracks => new DailyStudyLibrary(ensureHasDates(tracks))),
+					// Save the library to memory.
+					tap(library => this.library = library)
+				)
+			})
+		)
 	}
 	
 }

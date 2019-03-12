@@ -6,7 +6,7 @@ import { DailyLessonTrack, LessonQuery } from "./dailyLessons";
  */
 export class DailyStudyLibrary {
 
-    tracks:DailyLessonTrack[];
+	constructor(public tracks: DailyLessonTrack[]) { }
 
     /**
      * @description Query the daily study information.
