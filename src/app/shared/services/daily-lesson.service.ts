@@ -7,8 +7,11 @@ import { knownFolders, File } from "tns-core-modules/file-system";
 
 const lessonApiUrl: string = 'lesson-api.herokuapp.com';
 
-function getFile(): File {
-	return knownFolders.documents().getFile("json");
+function ensureHasDates(tracks: DailyLessonTrack[]): DailyLessonTrack[] {
+	return tracks.map(track => {
+		track.days.forEach(day => day.date = new Date(day.date));
+		return track;
+	});
 }
 
 function parseLibrary(json: string): DailyStudyLibrary {
@@ -19,32 +22,8 @@ function parseLibrary(json: string): DailyStudyLibrary {
 	return new DailyStudyLibrary(tracks);
 }
 
-function getFromFile(): Observable<DailyStudyLibrary> {
-	return from(getFile().readText()).pipe(
-		map(json => parseLibrary(json))
-	)
-}
-
-function ensureHasDates(tracks: DailyLessonTrack[]): DailyLessonTrack[] {
-	return tracks.map(track => {
-		track.days.forEach(day => day.date = new Date(day.date));
-		return track;
-	});
-}
-
-function saveJson(json: string) {
-	return concat(
-		from(getFile().remove()),
-		from(getFile().writeText(json))
-	)
-}
-
-@Injectable({
-	providedIn: 'root'
-})
-export class DailyLessonServiceService {
-
-	constructor(private http: HttpClient) { }
+export class DailyLessonServiceServiceBase {
+	constructor(private http: HttpClient, private getFile: () => File) { }
 
 	library: DailyStudyLibrary;
 
@@ -55,12 +34,12 @@ export class DailyLessonServiceService {
 		}
 
 		// Try to load from file.
-		getFromFile().pipe(
+		this.getFromFile().pipe(
 			// If that fails, load from network.
 			catchError(() => {
 				return this.http.get<DailyLessonTrack[]>(lessonApiUrl).pipe(
 					// Save it to file.
-					tap(tracks => saveJson(JSON.stringify(tracks))),
+					tap(tracks => this.saveJson(JSON.stringify(tracks))),
 					// Convert it to a library.
 					map(tracks => new DailyStudyLibrary(ensureHasDates(tracks))),
 					// Save the library to memory.
@@ -69,5 +48,26 @@ export class DailyLessonServiceService {
 			})
 		)
 	}
-	
+
+	getFromFile(): Observable<DailyStudyLibrary> {
+		return from(this.getFile().readText()).pipe(
+			map(json => parseLibrary(json))
+		)
+	}
+
+	saveJson(json: string) {
+		return concat(
+			from(this.getFile().remove()),
+			from(this.getFile().writeText(json))
+		)
+	}
+}
+
+@Injectable({
+	providedIn: 'root'
+})
+export class DailyLessonServiceService extends DailyLessonServiceServiceBase {
+	constructor(http: HttpClient) {
+		super(http, () => knownFolders.documents().getFile("json"));
+	}
 }
