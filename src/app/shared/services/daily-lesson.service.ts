@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { DailyStudyLibrary, DailyLessonTrack } from '../models/dailyLessons';
 import { Observable, from, concat } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
-import { knownFolders, File } from "tns-core-modules/file-system";
+import { LessonFileService } from './lesson-file.service';
 
 const lessonApiUrl: string = 'lesson-api.herokuapp.com';
 
@@ -22,10 +22,13 @@ function parseLibrary(json: string): DailyStudyLibrary {
 	return new DailyStudyLibrary(tracks);
 }
 
-export class DailyLessonServiceBase {
-	constructor(private http: HttpClient, private getFile: () => File) { }
+@Injectable({
+	providedIn: 'root'
+})
+export class DailyLessonService {
+	constructor(private http: HttpClient, private lessonFile:LessonFileService) { }
 
-	library: DailyStudyLibrary;
+	private library: DailyStudyLibrary;
 
 	getLibrary(): Observable<DailyStudyLibrary> {
 		// Try to load from memory.
@@ -49,25 +52,16 @@ export class DailyLessonServiceBase {
 		)
 	}
 
-	getFromFile(): Observable<DailyStudyLibrary> {
-		return from(this.getFile().readText()).pipe(
+	private getFromFile(): Observable<DailyStudyLibrary> {
+		return from(this.lessonFile.get().readText()).pipe(
 			map(json => parseLibrary(json))
 		)
 	}
 
-	saveJson(json: string) {
+	private saveJson(json: string) {
 		return concat(
-			from(this.getFile().remove()),
-			from(this.getFile().writeText(json))
+			from(this.lessonFile.get().remove()),
+			from(this.lessonFile.get().writeText(json))
 		)
-	}
-}
-
-@Injectable({
-	providedIn: 'root'
-})
-export class DailyLessonServiceService extends DailyLessonServiceBase {
-	constructor(http: HttpClient) {
-		super(http, () => knownFolders.documents().getFile("json"));
 	}
 }
