@@ -22,7 +22,7 @@ function parseLibrary(json: string): DailyStudyLibrary {
 	return new DailyStudyLibrary(tracks);
 }
 
-export class DailyLessonServiceServiceBase {
+export class DailyLessonServiceBase {
 	constructor(private http: HttpClient, private getFile: () => File) { }
 
 	library: DailyStudyLibrary;
@@ -66,7 +66,7 @@ export class DailyLessonServiceServiceBase {
 @Injectable({
 	providedIn: 'root'
 })
-export class DailyLessonServiceService extends DailyLessonServiceServiceBase {
+export class DailyLessonServiceService extends DailyLessonServiceBase {
 	constructor(http: HttpClient) {
 		super(http, () => knownFolders.documents().getFile("json"));
 	}

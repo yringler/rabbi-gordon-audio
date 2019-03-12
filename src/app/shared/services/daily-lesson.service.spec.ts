@@ -1,12 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { DailyLessonServiceService } from './daily-lesson.service';
+import { DailyLessonService } from './daily-lesson.service';
 
 describe('DailyLessonServiceService', () => {
-  beforeEach(() => TestBed.configureTestingModule({}));
+  beforeEach(() => TestBed.configureTestingModule({
+  }));
 
   it('should be created', () => {
-    const service: DailyLessonServiceService = TestBed.get(DailyLessonServiceService);
+    const service: DailyLessonService = TestBed.get(DailyLessonService);
     expect(service).toBeTruthy();
   });
 });
