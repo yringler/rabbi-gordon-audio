@@ -15,11 +15,8 @@ function ensureHasDates(tracks: DailyLessonTrack[]): DailyLessonTrack[] {
 }
 
 function parseLibrary(json: string): DailyStudyLibrary {
-	console.debug('read from file');
-
-	let tracks = JSON.parse(json, (key, value) => {
-		return key == "date" ? new Date(value) : value;
-	});
+	let tracks:DailyLessonTrack[] = JSON.parse(json);
+	ensureHasDates(tracks);
 
 	return new DailyStudyLibrary(tracks);
 }
@@ -40,9 +37,15 @@ export class DailyLessonService {
 
 		// Try to load from file.
 		return this.getFromFile().pipe(
+			tap(library => {
+				if (!library.has({ date: 0 })) {
+					throw "Failed to load from file: doesn't have required dates."
+				}
+			}),
 			// If that fails, load from network.
-			catchError(() => {
-				console.log('no load from file');
+			catchError((e) => {
+				console.log(`Failed to load from file: ${e}`);
+
 				return this.http.get<DailyLessonTrack[]>(lessonApiUrl).pipe(
 					// Save it to file.
 					tap(tracks => this.saveJson(JSON.stringify(tracks))),

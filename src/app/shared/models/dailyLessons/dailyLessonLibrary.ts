@@ -1,4 +1,4 @@
-import { addDays, differenceInDays } from "date-fns";
+import { addDays } from "date-fns";
 import { DailyLessonTrack, LessonQuery } from "./dailyLessons";
 
 /**
@@ -17,7 +17,8 @@ export class DailyStudyLibrary {
      * And if you query for a single date, the DailyLessonTrack.days array will only have
      * a single value.
      */
-    query(query?:LessonQuery):DailyLessonTrack[] {
+	query(query?: LessonQuery): DailyLessonTrack[] {
+		debugger;
         if (!query) {
             return this.tracks;
         } 
@@ -41,14 +42,19 @@ export class DailyStudyLibrary {
             }
 
             // Shallow clone the lessons so that we don't change the original array.
-            queriedTracks = queriedTracks.map(track => Object.assign({}, track));
+			queriedTracks = queriedTracks.map(track => Object.assign({}, track));
 
             // Only return requested date.
-            queriedTracks.forEach(track => 
-                track.days = track.days.filter(day => 
-                    differenceInDays(day.date, queryDate) == 0));
+			queriedTracks.forEach(track => {
+				track.days = track.days.filter(day =>
+					day.date.toDateString() == queryDate.toDateString());
+			});
         }
 
-        return queriedTracks;
-    }
+        return queriedTracks.filter(track => track.days.length > 0);
+	}
+	
+	has(query: LessonQuery): boolean {
+		return this.query(query).length > 0;
+	}
 }
