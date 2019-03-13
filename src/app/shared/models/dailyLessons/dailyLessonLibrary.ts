@@ -1,4 +1,4 @@
-import { addDays } from "date-fns";
+import { addDays, isWithinRange, startOfDay, endOfDay } from "date-fns";
 import { DailyLessonTrack, LessonQuery } from "./dailyLessons";
 
 /**
@@ -32,22 +32,27 @@ export class DailyStudyLibrary {
 
         // Filter date.
         if (query.date != null) {
-            let queryDate:Date;
+            let startDate:Date;
 
             /* Get date to filter by. */
             if (typeof query.date == "number") {
-                queryDate = addDays(new Date, query.date);
+                startDate = addDays(new Date, query.date);
             } else {
-                queryDate = query.date;
-            }
+                startDate = query.date;
+			}
+
+			startDate = startOfDay(startDate);
+			
+			let duration = query.duration != null ? query.duration : 1;
+			let endDate = addDays(startDate, duration - 1);
+			endDate = endOfDay(endDate);
 
             // Shallow clone the lessons so that we don't change the original array.
 			queriedTracks = queriedTracks.map(track => Object.assign({}, track));
 
             // Only return requested date.
 			queriedTracks.forEach(track => {
-				track.days = track.days.filter(day =>
-					day.date.toDateString() == queryDate.toDateString());
+				track.days = track.days.filter(day => isWithinRange(day.date, startDate, endDate));
 			});
         }
 

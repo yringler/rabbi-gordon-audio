@@ -36,6 +36,11 @@ export class LessonQuery {
      */
 	date?: number | Date;
 
+	/**
+	 * @description The number of days from given date which should be returned.
+	 */
+	duration?: number;
+
     /**
      * @description What the lesson is on.
      */
