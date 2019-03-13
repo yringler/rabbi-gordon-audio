@@ -38,7 +38,8 @@
             "platform": "android",
             "appRoot": "${workspaceRoot}",
             "sourceMaps": true,
-            "watch": false
+            "watch": false,
+            "tnsArgs": ["--bundle"]
         }
     ]
 }

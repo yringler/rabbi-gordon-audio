@@ -1,4 +1,8 @@
 import { Component, OnInit } from "@angular/core";
+import { DailyLessonService } from "../shared/services/daily-lesson.service";
+import { DailyLessonTrack } from "../shared/models/dailyLessons";
+import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
 
 @Component({
     selector: "Home",
@@ -7,11 +11,13 @@ import { Component, OnInit } from "@angular/core";
 })
 export class HomeComponent implements OnInit {
 
-    constructor() {
-        // Use the component constructor to inject providers.
-    }
+    todaysLessons$: Observable<DailyLessonTrack[]>;
+
+    constructor(private dailyLessonService: DailyLessonService) { }
 
     ngOnInit(): void {
-        // Init your component properties here.
+        this.todaysLessons$ = this.dailyLessonService.getLibrary().pipe(
+            map(library => library.query({date: 0}))
+        );
     }
 }
