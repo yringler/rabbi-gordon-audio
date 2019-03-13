@@ -15,7 +15,7 @@ export class HomeComponent implements OnInit {
 
     constructor(private dailyLessonService: DailyLessonService) { }
 
-    ngOnInit(): void {
+	ngOnInit(): void {
         this.todaysLessons$ = this.dailyLessonService.getLibrary().pipe(
             map(library => library.query({date: 0}))
         );

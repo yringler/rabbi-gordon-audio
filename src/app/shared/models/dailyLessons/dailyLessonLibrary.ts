@@ -22,7 +22,7 @@ export class DailyStudyLibrary {
             return this.tracks;
         } 
 
-        let queriedTracks:DailyLessonTrack[];
+		let queriedTracks: DailyLessonTrack[] = this.tracks;
 
         // Filter lesson type.
         if (query.type) {

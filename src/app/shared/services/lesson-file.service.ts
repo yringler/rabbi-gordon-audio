@@ -6,8 +6,7 @@ import { knownFolders, File } from 'tns-core-modules/file-system/file-system';
 })
 export class LessonFileService {
   get(): File {
-    let file = knownFolders.currentApp().getFile("lessonJson");
-    console.log("DEV: Path:" + file.path);
+    let file = knownFolders.documents().getFile("lessonJson");
     return file;
   }
 }

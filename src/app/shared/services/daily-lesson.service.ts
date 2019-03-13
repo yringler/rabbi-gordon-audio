@@ -5,7 +5,7 @@ import { Observable, from, concat } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import { LessonFileService } from './lesson-file.service';
 
-const lessonApiUrl: string = 'lesson-api.herokuapp.com';
+const lessonApiUrl: string = 'https://lesson-api.herokuapp.com/';
 
 function ensureHasDates(tracks: DailyLessonTrack[]): DailyLessonTrack[] {
 	return tracks.map(track => {
@@ -15,6 +15,8 @@ function ensureHasDates(tracks: DailyLessonTrack[]): DailyLessonTrack[] {
 }
 
 function parseLibrary(json: string): DailyStudyLibrary {
+	console.debug('read from file');
+
 	let tracks = JSON.parse(json, (key, value) => {
 		return key == "date" ? new Date(value) : value;
 	});
@@ -37,9 +39,10 @@ export class DailyLessonService {
 		}
 
 		// Try to load from file.
-		this.getFromFile().pipe(
+		return this.getFromFile().pipe(
 			// If that fails, load from network.
 			catchError(() => {
+				console.log('no load from file');
 				return this.http.get<DailyLessonTrack[]>(lessonApiUrl).pipe(
 					// Save it to file.
 					tap(tracks => this.saveJson(JSON.stringify(tracks))),
@@ -58,10 +61,13 @@ export class DailyLessonService {
 		)
 	}
 
-	private saveJson(json: string) {
-		return concat(
-			from(this.lessonFile.get().remove()),
-			from(this.lessonFile.get().writeText(json))
-		)
+	private async saveJson(json: string) {
+		try {
+			await this.lessonFile.get().remove();
+			await this.lessonFile.get().writeText(json);
+		}
+		catch (err) {
+			console.log(`Error in saveJson: ${err}`)
+		}
 	}
 }

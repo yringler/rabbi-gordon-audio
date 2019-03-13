@@ -29,7 +29,8 @@
             "platform": "android",
             "appRoot": "${workspaceRoot}",
             "sourceMaps": true,
-            "watch": true
+			"watch": true,
+			"tnsArgs": ["--bundle", "--debug-brk"]
         },
         {
             "name": "Attach on Android",
