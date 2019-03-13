@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { getJSON } from "tns-core-modules/http";
 import { DailyStudyLibrary, DailyLessonTrack } from '../models/dailyLessons';
 import { Observable, from, concat } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
-import { LessonFileService } from './lesson-file.service';
+import { knownFolders, File } from 'tns-core-modules/file-system/file-system';
 
 const lessonApiUrl: string = 'https://lesson-api.herokuapp.com/';
 
@@ -21,11 +21,15 @@ function parseLibrary(json: string): DailyStudyLibrary {
 	return new DailyStudyLibrary(tracks);
 }
 
+function getFile(): File {
+	return knownFolders.documents().getFile("lessonJson")
+}
+
 @Injectable({
 	providedIn: 'root'
 })
 export class DailyLessonService {
-	constructor(private http: HttpClient, private lessonFile:LessonFileService) { }
+	constructor() { }
 
 	private library: DailyStudyLibrary;
 
@@ -36,21 +40,23 @@ export class DailyLessonService {
 		}
 
 		// Try to load from file.
-		return this.getFromFile().pipe(
+		return from(getFile().readText()).pipe(
+			map(json => parseLibrary(json)),
+			// Make sure that file is up to date.
 			tap(library => {
 				if (!library.has({ date: 0 })) {
 					throw "Failed to load from file: doesn't have required dates."
 				}
 			}),
-			// If that fails, load from network.
+			// If file loading fails, load from network.
 			catchError((e) => {
 				console.log(`Failed to load from file: ${e}`);
 
-				return this.http.get<DailyLessonTrack[]>(lessonApiUrl).pipe(
+				return from(getJSON(lessonApiUrl)).pipe(
 					// Save it to file.
 					tap(tracks => this.saveJson(JSON.stringify(tracks))),
 					// Convert it to a library.
-					map(tracks => new DailyStudyLibrary(ensureHasDates(tracks))),
+					map(tracks => new DailyStudyLibrary(ensureHasDates(<DailyLessonTrack[]>tracks))),
 					// Save the library to memory.
 					tap(library => this.library = library)
 				)
@@ -58,16 +64,10 @@ export class DailyLessonService {
 		)
 	}
 
-	private getFromFile(): Observable<DailyStudyLibrary> {
-		return from(this.lessonFile.get().readText()).pipe(
-			map(json => parseLibrary(json))
-		)
-	}
-
 	private async saveJson(json: string) {
 		try {
-			await this.lessonFile.get().remove();
-			await this.lessonFile.get().writeText(json);
+			await getFile().remove();
+			await getFile().writeText(json);
 		}
 		catch (err) {
 			console.log(`Error in saveJson: ${err}`)

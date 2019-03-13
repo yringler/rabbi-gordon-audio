@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
 import { DailyLessonService } from './daily-lesson.service';
-import { LessonFileService } from './lesson-file.service';
 
 describe('DailyLessonService', () => {
 	beforeEach(() => {
@@ -16,7 +15,6 @@ describe('DailyLessonService', () => {
 		TestBed.configureTestingModule({
 			providers: [
 				DailyLessonService,
-				{ provide: LessonFileService, useValue: mockFileService }
 			]
 		})
 	});
