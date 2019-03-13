@@ -44,15 +44,15 @@ export class DailyStudyLibrary {
 			startDate = startOfDay(startDate);
 			
 			let duration = query.duration != null ? query.duration : 1;
-			let endDate = addDays(startDate, duration - 1);
-			endDate = endOfDay(endDate);
+			let lastDate = addDays(startDate, duration - 1);
+			lastDate = endOfDay(lastDate);
 
             // Shallow clone the lessons so that we don't change the original array.
 			queriedTracks = queriedTracks.map(track => Object.assign({}, track));
 
             // Only return requested date.
 			queriedTracks.forEach(track => {
-				track.days = track.days.filter(day => isWithinRange(day.date, startDate, endDate));
+				track.days = track.days.filter(day => isWithinRange(day.date, startDate, lastDate));
 			});
         }
 
