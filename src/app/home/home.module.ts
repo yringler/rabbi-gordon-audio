@@ -3,7 +3,7 @@ import { NativeScriptCommonModule } from "nativescript-angular/common";
 
 import { HomeRoutingModule } from "./home-routing.module";
 import { HomeComponent } from "./home.component";
-import { LessonComponent } from './lesson/lesson.component';
+import { DailyLessonComponent } from './daily-lesson/daily-lesson.component';
 
 @NgModule({
     imports: [
@@ -12,7 +12,7 @@ import { LessonComponent } from './lesson/lesson.component';
     ],
     declarations: [
         HomeComponent,
-        LessonComponent
+        DailyLessonComponent
     ],
     schemas: [
         NO_ERRORS_SCHEMA

@@ -3,11 +3,11 @@ import { DailyLessonTrack } from '~/app/shared/models/dailyLessons';
 
 @Component({
   selector: 'daily-lesson',
-  templateUrl: './lesson.component.html',
-  styleUrls: ['./lesson.component.css'],
+  templateUrl: './daily-lesson.component.html',
+  styleUrls: ['./daily-lesson.component.css'],
   moduleId: module.id,
 })
-export class LessonComponent implements OnInit {
+export class DailyLessonComponent implements OnInit {
 
   constructor() { }
 
