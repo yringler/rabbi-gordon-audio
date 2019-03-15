@@ -1,3 +1,5 @@
+import { File } from "tns-core-modules/file-system/file-system";
+
 /**
  * @description The diffrent types which are studied every day.
  */
@@ -14,6 +16,8 @@ export class Lesson {
 	date: Date;
 	source: string;
 	title: string;
+	// File is not guaranteed to be null, unless retrieved from the lesson media service.
+	file?: File;
 }
 
 /**
