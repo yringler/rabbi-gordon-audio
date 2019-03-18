@@ -7,16 +7,23 @@ import { getFile } from 'tns-core-modules/http/http';
 import { path, knownFolders, File } from 'tns-core-modules/file-system/file-system';
 
 // Downloads media for given lessons, and saves file object to the lesson.
+// Uses existing if already downloaded.
 function downloadMedia(tracks: DailyLessonTrack[]): Observable<DailyLessonTrack[]> {
 	let observableArray: Observable<File>[] = [];
 
 	tracks.forEach(track => {
 		track.days.forEach(day => {
 			const filePath: string = path.join(knownFolders.currentApp().path, `${track.type}${day.date.valueOf()}`);
-			let fileLoad = from(getFile(day.source, filePath)).pipe(
-				tap(file => day.file = file)
-			)
-			observableArray.push(fileLoad);
+
+			if (File.exists(filePath)) {
+				observableArray.push(from([File.fromPath(filePath)]));
+			} else {
+				let fileLoad = from(getFile(day.source, filePath)).pipe(
+					tap(file => day.file = file),
+					tap(file => console.log(`Downloaded: ${file.name}: ${file.size / 1024}`))
+				)
+				observableArray.push(fileLoad);
+			}
 		});
 	});
 
