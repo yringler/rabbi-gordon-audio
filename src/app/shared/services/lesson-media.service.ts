@@ -8,7 +8,7 @@ import { path, knownFolders, File } from 'tns-core-modules/file-system/file-syst
 
 // Downloads media for given lessons, and saves file object to the lesson.
 // Uses existing if already downloaded.
-function downloadMedia(tracks: DailyLessonTrack[]): Observable<DailyLessonTrack[]> {
+function loadMedia(tracks: DailyLessonTrack[]): Observable<DailyLessonTrack[]> {
 	let observableArray: Observable<File>[] = [];
 
 	tracks.forEach(track => {
@@ -46,7 +46,7 @@ export class LessonMediaService {
 	getFilesForLessons(query: LessonQuery) : Observable<DailyLessonTrack[]> {
 		return this.dailyLessonService.getLibrary().pipe(
 			map(library => library.query(query)),
-			concatMap(tracks => downloadMedia(tracks))
+			concatMap(tracks => loadMedia(tracks))
 		)
 	}
 }
