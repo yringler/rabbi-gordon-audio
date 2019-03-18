@@ -18,6 +18,7 @@ export class DailyLessonComponent implements OnInit {
 	@Input() track: DailyLessonTrack;
 
 	togglePlay() {
+		console.log(this.track.days[0].file);
 		this.player.toggle(this.track.days[0].file.path);
 	}
 }
