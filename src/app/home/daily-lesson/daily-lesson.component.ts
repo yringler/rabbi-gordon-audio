@@ -1,22 +1,23 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { DailyLessonTrack } from '~/app/shared/models/dailyLessons';
+import { MediaPlayerService } from '~/app/shared/services/media-player.service';
 
 @Component({
-  selector: 'daily-lesson',
-  templateUrl: './daily-lesson.component.html',
-  styleUrls: ['./daily-lesson.component.css'],
-  moduleId: module.id,
+	selector: 'daily-lesson',
+	templateUrl: './daily-lesson.component.html',
+	styleUrls: ['./daily-lesson.component.css'],
+	moduleId: module.id,
 })
 export class DailyLessonComponent implements OnInit {
 
-  constructor() { }
+	constructor(private player: MediaPlayerService) { }
 
-  ngOnInit() {
-  }
+	ngOnInit() {
+	}
 
-  @Input() track:DailyLessonTrack;
+	@Input() track: DailyLessonTrack;
 
-  playFile() {
-    console.log(`playing: ${this.track.days[0].source}`);
-  }
+	togglePlay() {
+		this.player.toggle(this.track.days[0].file.path);
+	}
 }
