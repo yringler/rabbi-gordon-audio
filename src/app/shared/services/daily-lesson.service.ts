@@ -11,8 +11,6 @@ function ensureHasDates(tracks: DailyLessonTrack[]): DailyLessonTrack[] {
 	return tracks.map(track => {
 		track.days.forEach(day => {
 			day.date = new Date(day.date);
-			let fileName = path.join(knownFolders.currentApp().path, `${track.type}_${day.date.valueOf()}`);
-			day.file = fileName;
 		});
 		return track;
 	});
@@ -56,11 +54,21 @@ export class DailyLessonService {
 			catchError((e) => {
 				console.log(`Failed to load from file: ${e}`);
 
-				return from(getJSON(lessonApiUrl)).pipe(
+				return from(getJSON<DailyLessonTrack[]>(lessonApiUrl)).pipe(
+					tap(tracks => ensureHasDates(<DailyLessonTrack[]>tracks)),
+					// Set the name where the media file will be saved.
+					tap(tracks => {
+						tracks.forEach(track => {
+							track.days.forEach(day => {
+								let fileName = path.join(knownFolders.documents().path, `${track.type}_${day.date.valueOf()}`);
+								day.file = fileName;
+							})
+						})
+					}),
 					// Save it to file.
 					tap(tracks => this.saveJson(JSON.stringify(tracks))),
 					// Convert it to a library.
-					map(tracks => new DailyStudyLibrary(ensureHasDates(<DailyLessonTrack[]>tracks))),
+					map(tracks => new DailyStudyLibrary(tracks)),
 					// Save the library to memory.
 					tap(library => this.library = library)
 				)
