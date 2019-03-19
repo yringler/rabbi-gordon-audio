@@ -9,25 +9,19 @@ import { path, knownFolders, File } from 'tns-core-modules/file-system/file-syst
 // Downloads media for given lessons, and saves file object to the lesson.
 // Uses existing if already downloaded.
 function loadMedia(tracks: DailyLessonTrack[]): Observable<DailyLessonTrack[]> {
-	console.log("loading media...")
 	let observableArray: Observable<File>[] = [];
 
 	tracks.forEach(track => {
 		track.days.forEach(day => {
-			const filePath: string = path.join(knownFolders.currentApp().path, `${track.type}${day.date.valueOf()}.mp3`);
 			let observableFile: Observable<File>;
 
-			if (File.exists(filePath)) {
-				observableFile = from([File.fromPath(filePath)]);
+			if (File.exists(day.file)) {
+				observableFile = from([File.fromPath(day.file)]);
 			} else {
-				observableFile = from(getFile(day.source, filePath));
+				observableFile = from(getFile(day.source, day.file));
 			}
 
-			console.log("file: " + filePath);
-
 			observableFile.pipe(
-				tap(file => day.file = file),
-				tap(file => console.log(`Downloaded: ${file.name}: ${file.size / 1024}`)),
 				catchError((error, caught) => { console.log("error: " + error); return caught})
 			)
 
@@ -37,7 +31,6 @@ function loadMedia(tracks: DailyLessonTrack[]): Observable<DailyLessonTrack[]> {
 
 	return zip(...observableArray).pipe(
 		// After all the files are downloaded, re-emit the tracks array (which now have the file object set).
-		tap(files => console.log(`DEBUG: ${files.length}, ${files[0].path}`)),
 		map(() => tracks)
 	)
 }
@@ -54,7 +47,6 @@ export class LessonMediaService {
 	 */
 	getFilesForLessons(query: LessonQuery) : Observable<DailyLessonTrack[]> {
 		return this.dailyLessonService.getLibrary().pipe(
-			tap(() => console.log("Got lessons")),
 			map(library => library.query(query)),
 			mergeMap(tracks => loadMedia(tracks)),
 			catchError((error, caught) => { console.log("Caught: " + error); return caught})

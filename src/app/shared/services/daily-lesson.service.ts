@@ -3,13 +3,17 @@ import { getJSON } from "tns-core-modules/http";
 import { DailyStudyLibrary, DailyLessonTrack } from '../models/dailyLessons';
 import { Observable, from, concat } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
-import { knownFolders, File } from 'tns-core-modules/file-system/file-system';
+import { knownFolders, File, path } from 'tns-core-modules/file-system/file-system';
 
 const lessonApiUrl: string = 'https://lesson-api.herokuapp.com/';
 
 function ensureHasDates(tracks: DailyLessonTrack[]): DailyLessonTrack[] {
 	return tracks.map(track => {
-		track.days.forEach(day => day.date = new Date(day.date));
+		track.days.forEach(day => {
+			day.date = new Date(day.date);
+			let fileName = path.join(knownFolders.currentApp().path, `${track.type}_${day.date.valueOf()}`);
+			day.file = fileName;
+		});
 		return track;
 	});
 }

@@ -17,7 +17,7 @@ export class Lesson {
 	source: string;
 	title: string;
 	// File is not guaranteed to be null, unless retrieved from the lesson media service.
-	file?: File;
+	file?: string;
 }
 
 /**

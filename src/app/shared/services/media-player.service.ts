@@ -23,18 +23,20 @@ export class MediaPlayerService {
 	}
 
 	// Toggle player. If a path is passed in, makes sure that file is playing.
-	toggle(filePath ?:string) {
-		if (this.player.isAudioPlaying() && (filePath == null || this.currentFile == filePath)) {
+	toggle(requestedFile ?:string) {
+		console.log(`${requestedFile}: (${this.currentFile}): ${this.player.isAudioPlaying()}`)
+
+		if (this.player.isAudioPlaying() && (requestedFile == null || this.currentFile == requestedFile)) {
 			this.player.pause();
 		} else {
-			if (this.currentFile != null && (filePath == null || this.currentFile == filePath)) {
+			if (this.currentFile != null && (requestedFile == null || this.currentFile == requestedFile)) {
 				this.player.resume();
 				console.log("resumed");
-			} else if (filePath != null) {
-				this.play(filePath);
-				console.log("switched to file:" + filePath);
+			} else if (requestedFile != null) {
+				this.play(requestedFile);
+				console.log("switched to file:" + requestedFile);
 			} else {
-				console.debug("ERROR: Runtime error: can not resume when file is not being played.");
+				console.log("ERROR: Runtime error: can not resume when file is not being played.");
 			}
 		  }
 	}
