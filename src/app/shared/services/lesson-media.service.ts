@@ -42,7 +42,7 @@ export class LessonMediaService {
 	/**
 	 * @description Ensure that the media referenced by this lesson is downloaded.
 	 */
-	getFilesForLesson(lesson: Lesson) : Observable<string> {
+	getFilesForLesson(track: DailyLessonTrack) : Observable<string> {
 		return this.dailyLessonService.getLibrary().pipe(
 			map(library => library.query(query)),
 			mergeMap(tracks => loadMedia(tracks)),
