@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { getJSON } from "tns-core-modules/http";
 import { DailyStudyLibrary, DailyLessonTrack } from '../models/dailyLessons';
-import { Observable, from, concat } from 'rxjs';
+import { Observable, from, concat, BehaviorSubject, ReplaySubject } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import { knownFolders, File, path } from 'tns-core-modules/file-system/file-system';
 
@@ -31,18 +31,21 @@ function getFile(): File {
 	providedIn: 'root'
 })
 export class DailyLessonService {
-	constructor() { }
+	constructor() {
+		this.library$ = new ReplaySubject<DailyStudyLibrary>();
+	}
 
-	private library: DailyStudyLibrary;
+	private library$: ReplaySubject<DailyStudyLibrary>;
 
-	getLibrary(): Observable<DailyStudyLibrary> {
+	getLibrary(): ReplaySubject<DailyStudyLibrary> {
 		// Try to load from memory.
-		if (this.library) {
-			return from([this.library]);
+		if (this.library$) {
+			return this.library$;
 		}
 
+		let loadingFile$ = 
 		// Try to load from file.
-		return from(getFile().readText()).pipe(
+		from(getFile().readText()).pipe(
 			map(json => parseLibrary(json)),
 			// Make sure that file is up to date.
 			tap(library => {
@@ -50,30 +53,24 @@ export class DailyLessonService {
 					throw "Failed to load from file: doesn't have required dates."
 				}
 			}),
+
 			// If file loading fails, load from network.
 			catchError((e) => {
 				console.log(`Failed to load from file: ${e}`);
 
 				return from(getJSON<DailyLessonTrack[]>(lessonApiUrl)).pipe(
 					tap(tracks => ensureHasDates(<DailyLessonTrack[]>tracks)),
-					// Set the name where the media file will be saved.
-					tap(tracks => {
-						tracks.forEach(track => {
-							track.days.forEach(day => {
-								let fileName = path.join(knownFolders.documents().path, `${track.type}_${day.date.valueOf()}`);
-								day.file = fileName;
-							})
-						})
-					}),
 					// Save it to file.
 					tap(tracks => this.saveJson(JSON.stringify(tracks))),
 					// Convert it to a library.
-					map(tracks => new DailyStudyLibrary(tracks)),
-					// Save the library to memory.
-					tap(library => this.library = library)
+					map(tracks => new DailyStudyLibrary(tracks))
 				)
 			})
-		)
+		);
+
+		loadingFile$.subscribe(this.library$);
+
+		return this.library$;
 	}
 
 	private async saveJson(json: string) {

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { DailyLessonService } from './daily-lesson.service';
-import { LessonQuery, DailyLessonTrack} from '../models/dailyLessons';
+import { LessonQuery, DailyLessonTrack, Lesson} from '../models/dailyLessons';
 import { Observable, from, zip } from 'rxjs';
 import { map, concatMap, tap, catchError, mergeMap } from 'rxjs/operators';
 import { getFile } from 'tns-core-modules/http/http';
@@ -39,13 +39,10 @@ function loadMedia(tracks: DailyLessonTrack[]): Observable<DailyLessonTrack[]> {
   providedIn: 'root'
 })
 export class LessonMediaService {
-
-	constructor(private dailyLessonService: DailyLessonService) { }
-	
 	/**
-	 * @description Ensure that the media referenced by this query is downloaded.
+	 * @description Ensure that the media referenced by this lesson is downloaded.
 	 */
-	getFilesForLessons(query: LessonQuery) : Observable<DailyLessonTrack[]> {
+	getFilesForLesson(lesson: Lesson) : Observable<string> {
 		return this.dailyLessonService.getLibrary().pipe(
 			map(library => library.query(query)),
 			mergeMap(tracks => loadMedia(tracks)),
