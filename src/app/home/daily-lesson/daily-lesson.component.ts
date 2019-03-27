@@ -21,6 +21,6 @@ export class DailyLessonComponent implements OnInit {
 	@Input() track: DailyLessonTrack;
 
 	togglePlay() {
-		this.player.toggle(this.track.days[0].file);
+		this.player.toggle(this.track.days[0].id);
 	}
 }

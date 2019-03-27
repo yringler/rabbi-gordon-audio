@@ -8,14 +8,14 @@ import { path, knownFolders, File } from 'tns-core-modules/file-system/file-syst
 
 // Downloads media for given lessons, and saves file object to the lesson.
 // Uses existing if already downloaded.
-function loadMedia(track: DailyLessonTrack): Observable<string> {
-	const filePath = path.join(knownFolders.documents().path, track.days[0].id);
+function loadMedia(lesson:Lesson): Observable<string> {
+	const filePath = path.join(knownFolders.documents().path, lesson.id);
 
-	if(File.exists(filePath)) {
+	if (File.exists(filePath)) {
 		return from([filePath]);
 	}
 
-	return from(getFile(track.days[0].source, filePath)).pipe(
+	return from(getFile(lesson.source, filePath)).pipe(
 		map(file => file.path)
 	);
 }
@@ -33,14 +33,14 @@ export class LessonMediaService {
 	/**
 	 * @description Ensure that the media referenced by this lesson is downloaded.
 	 */
-	getFilesForLesson(track: DailyLessonTrack) : ReplaySubject<string> {
-		const key = track.days[0].id;
+	getFilesForLesson(lesson:Lesson) : ReplaySubject<string> {
+		const key = lesson.id;
 
 		if (this.files.has(key)) {
 			return this.files.get(key);
 		}
 
-		let mediaFile$ = loadMedia(track);
+		let mediaFile$ = loadMedia(lesson);
 		let mediaSubject$ = new ReplaySubject<string>();
 		
 		mediaFile$.subscribe(mediaSubject$);
