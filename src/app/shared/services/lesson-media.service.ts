@@ -1,30 +1,15 @@
 import { Injectable } from '@angular/core';
-import { DailyLessonService } from './daily-lesson.service';
-import { LessonQuery, DailyLessonTrack, Lesson} from '../models/dailyLessons';
-import { Observable, from, zip, ReplaySubject } from 'rxjs';
-import { map, concatMap, tap, catchError, mergeMap } from 'rxjs/operators';
-import { getFile } from 'tns-core-modules/http/http';
+import { Lesson } from '../models/dailyLessons';
+import { Observable, from, ReplaySubject } from 'rxjs';
+import { map} from 'rxjs/operators';
 import { path, knownFolders, File } from 'tns-core-modules/file-system/file-system';
-
-// Downloads media for given lessons, and saves file object to the lesson.
-// Uses existing if already downloaded.
-function loadMedia(lesson:Lesson): Observable<string> {
-	const filePath = path.join(knownFolders.documents().path, lesson.id);
-
-	if (File.exists(filePath)) {
-		return from([filePath]);
-	}
-
-	return from(getFile(lesson.source, filePath)).pipe(
-		map(file => file.path)
-	);
-}
+import { Downloader } from 'nativescript-downloader';
 
 @Injectable({
-  providedIn: 'root'
+	providedIn: 'root'
 })
 export class LessonMediaService {
-	private files:Map<string, ReplaySubject<string>>;
+	private files: Map<string, ReplaySubject<string>>;
 
 	constructor() {
 		this.files = new Map();
@@ -33,7 +18,7 @@ export class LessonMediaService {
 	/**
 	 * @description Ensure that the media referenced by this lesson is downloaded.
 	 */
-	getFilesForLesson(lesson:Lesson) : ReplaySubject<string> {
+	getFilesForLesson(lesson: Lesson): ReplaySubject<string> {
 		const key = lesson.id;
 
 		if (this.files.has(key)) {
@@ -41,10 +26,31 @@ export class LessonMediaService {
 		}
 
 		let mediaSubject$ = new ReplaySubject<string>();
-		
-		loadMedia(lesson).subscribe(mediaSubject$);
+
+		this.loadMedia(lesson).subscribe(mediaSubject$);
 
 		this.files.set(key, mediaSubject$);
 		return this.files.get(key);
+	}
+
+	// Downloads media for given lessons, and saves file object to the lesson.
+	// Uses existing if already downloaded.
+	private loadMedia(lesson: Lesson): Observable<string> {
+		const filePath = path.join(knownFolders.documents().path, lesson.id);
+
+		if (File.exists(filePath)) {
+			return from([filePath]);
+		}
+
+		let downloader = new Downloader();
+
+		let download = downloader.createDownload({
+			fileName: filePath,
+			url: lesson.source
+		});
+
+		return from(downloader.start(download)).pipe(
+			map(file => file.path)
+		);
 	}
 }
