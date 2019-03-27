@@ -2,7 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { DailyLessonTrack } from "../shared/models/dailyLessons";
 import { Observable } from "rxjs";
 import { DailyLessonService } from "../shared/services/daily-lesson.service";
-import { map } from "rxjs/operators";
+import { map, tap } from "rxjs/operators";
 
 @Component({
     selector: "Home",
@@ -17,7 +17,7 @@ export class HomeComponent implements OnInit {
 
 	ngOnInit(): void {
 		this.todaysLessons$ = this.lessonService.getLibrary().pipe(
-            map(library => library.query({date:0}))
+			map(library => library.query({ date: 0 }))
         );
     }
 }

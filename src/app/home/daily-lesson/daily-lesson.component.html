@@ -1,1 +1,1 @@
-<Button [text]="track.title" class="btn" (tap)='togglePlay()'></Button>
+<Button [text]="track.title" [isEnabled]="fileName != null"  class="btn" (tap)='togglePlay()'></Button>

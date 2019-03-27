@@ -24,17 +24,13 @@ export class MediaPlayerService {
 
 	// Toggle player. If a path is passed in, makes sure that file is playing.
 	toggle(requestedFile ?:string) {
-		console.log(`${requestedFile}: (${this.currentFile}): ${this.player.isAudioPlaying()}`)
-
 		if (this.player.isAudioPlaying() && (requestedFile == null || this.currentFile == requestedFile)) {
 			this.player.pause();
 		} else {
 			if (this.currentFile != null && (requestedFile == null || this.currentFile == requestedFile)) {
 				this.player.resume();
-				console.log("resumed");
 			} else if (requestedFile != null) {
 				this.play(requestedFile);
-				console.log("switched to file:" + requestedFile);
 			} else {
 				console.log("ERROR: Runtime error: can not resume when file is not being played.");
 			}
