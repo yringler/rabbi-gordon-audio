@@ -6,15 +6,10 @@ import { map, concatMap, tap, catchError, mergeMap } from 'rxjs/operators';
 import { getFile } from 'tns-core-modules/http/http';
 import { path, knownFolders, File } from 'tns-core-modules/file-system/file-system';
 
-function getFilePath(track: DailyLessonTrack) {
-	return path.join(knownFolders.documents().path,
-		`${track.type}_${track.days[0].date.valueOf()}`);
-}
-
 // Downloads media for given lessons, and saves file object to the lesson.
 // Uses existing if already downloaded.
 function loadMedia(track: DailyLessonTrack): Observable<string> {
-	const filePath = getFilePath(track);
+	const filePath = path.join(knownFolders.documents().path, track.days[0].id);
 
 	if(File.exists(filePath)) {
 		return from([filePath]);
@@ -23,10 +18,6 @@ function loadMedia(track: DailyLessonTrack): Observable<string> {
 	return from(getFile(track.days[0].source, filePath)).pipe(
 		map(file => file.path)
 	);
-}
-
-function getKey(track:DailyLessonTrack): string {
-	return `${track.type}_${track.days[1].date.valueOf()}`;
 }
 
 @Injectable({
@@ -43,7 +34,7 @@ export class LessonMediaService {
 	 * @description Ensure that the media referenced by this lesson is downloaded.
 	 */
 	getFilesForLesson(track: DailyLessonTrack) : ReplaySubject<string> {
-		const key = getKey(track);
+		const key = track.days[0].id;
 
 		if (this.files.has(key)) {
 			return this.files.get(key);

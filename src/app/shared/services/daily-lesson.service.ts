@@ -49,7 +49,7 @@ export class DailyLessonService {
 			map(json => parseLibrary(json)),
 			// Make sure that file is up to date.
 			tap(library => {
-				if (!library.has({ date: 0 })) {
+				if (!library.has({ date: 2 })) {
 					throw "Failed to load from file: doesn't have required dates."
 				}
 			}),
