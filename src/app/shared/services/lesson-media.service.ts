@@ -40,10 +40,9 @@ export class LessonMediaService {
 			return this.files.get(key);
 		}
 
-		let mediaFile$ = loadMedia(lesson);
 		let mediaSubject$ = new ReplaySubject<string>();
 		
-		mediaFile$.subscribe(mediaSubject$);
+		loadMedia(lesson).subscribe(mediaSubject$);
 
 		this.files.set(key, mediaSubject$);
 		return this.files.get(key);
