@@ -1,6 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { DailyLessonTrack } from '~/app/shared/models/dailyLessons';
 import { MediaPlayerService } from '~/app/shared/services/media-player.service';
+import { LessonMediaService } from '~/app/shared/services/lesson-media.service';
 
 @Component({
 	selector: 'daily-lesson',
@@ -10,7 +11,9 @@ import { MediaPlayerService } from '~/app/shared/services/media-player.service';
 })
 export class DailyLessonComponent implements OnInit {
 
-	constructor(private player: MediaPlayerService) { }
+	constructor(
+		private player: MediaPlayerService,
+		private lessonMediaService:LessonMediaService) { }
 
 	ngOnInit() {
 	}
