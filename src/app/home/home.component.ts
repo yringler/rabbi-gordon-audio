@@ -1,7 +1,8 @@
 import { Component, OnInit } from "@angular/core";
 import { DailyLessonTrack } from "../shared/models/dailyLessons";
 import { Observable } from "rxjs";
-import { LessonMediaService } from "../shared/services/lesson-media.service";
+import { DailyLessonService } from "../shared/services/daily-lesson.service";
+import { map, tap } from "rxjs/operators";
 
 @Component({
     selector: "Home",
@@ -12,9 +13,11 @@ export class HomeComponent implements OnInit {
 
     todaysLessons$: Observable<DailyLessonTrack[]>;
 
-    constructor(private lessonMediaService: LessonMediaService) { }
+    constructor(private lessonService: DailyLessonService) { }
 
 	ngOnInit(): void {
-		this.todaysLessons$ = this.lessonMediaService.getFilesForLessons({date: 0, duration: 3});
+		this.todaysLessons$ = this.lessonService.getLibrary().pipe(
+			map(library => library.query({ date: 0 }))
+        );
     }
 }

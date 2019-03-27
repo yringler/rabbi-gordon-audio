@@ -1,55 +1,50 @@
 import { Injectable } from '@angular/core';
 import { DailyLessonService } from './daily-lesson.service';
-import { LessonQuery, DailyLessonTrack} from '../models/dailyLessons';
-import { Observable, from, zip } from 'rxjs';
+import { LessonQuery, DailyLessonTrack, Lesson} from '../models/dailyLessons';
+import { Observable, from, zip, ReplaySubject } from 'rxjs';
 import { map, concatMap, tap, catchError, mergeMap } from 'rxjs/operators';
 import { getFile } from 'tns-core-modules/http/http';
 import { path, knownFolders, File } from 'tns-core-modules/file-system/file-system';
 
 // Downloads media for given lessons, and saves file object to the lesson.
 // Uses existing if already downloaded.
-function loadMedia(tracks: DailyLessonTrack[]): Observable<DailyLessonTrack[]> {
-	let observableArray: Observable<File>[] = [];
+function loadMedia(lesson:Lesson): Observable<string> {
+	const filePath = path.join(knownFolders.documents().path, lesson.id);
 
-	tracks.forEach(track => {
-		track.days.forEach(day => {
-			let observableFile: Observable<File>;
+	if (File.exists(filePath)) {
+		return from([filePath]);
+	}
 
-			if (File.exists(day.file)) {
-				observableFile = from([File.fromPath(day.file)]);
-			} else {
-				observableFile = from(getFile(day.source, day.file));
-			}
-
-			observableFile.pipe(
-				catchError((error, caught) => { console.log("error: " + error); return caught})
-			)
-
-			observableArray.push(observableFile);
-		});
-	});
-
-	return zip(...observableArray).pipe(
-		// After all the files are downloaded, re-emit the tracks array (which now have the file object set).
-		map(() => tracks)
-	)
+	return from(getFile(lesson.source, filePath)).pipe(
+		map(file => file.path)
+	);
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class LessonMediaService {
+	private files:Map<string, ReplaySubject<string>>;
 
-	constructor(private dailyLessonService: DailyLessonService) { }
-	
+	constructor() {
+		this.files = new Map();
+	}
+
 	/**
-	 * @description Ensure that the media referenced by this query is downloaded.
+	 * @description Ensure that the media referenced by this lesson is downloaded.
 	 */
-	getFilesForLessons(query: LessonQuery) : Observable<DailyLessonTrack[]> {
-		return this.dailyLessonService.getLibrary().pipe(
-			map(library => library.query(query)),
-			mergeMap(tracks => loadMedia(tracks)),
-			catchError((error, caught) => { console.log("Caught: " + error); return caught})
-		)
+	getFilesForLesson(lesson:Lesson) : ReplaySubject<string> {
+		const key = lesson.id;
+
+		if (this.files.has(key)) {
+			return this.files.get(key);
+		}
+
+		let mediaSubject$ = new ReplaySubject<string>();
+		
+		loadMedia(lesson).subscribe(mediaSubject$);
+
+		this.files.set(key, mediaSubject$);
+		return this.files.get(key);
 	}
 }
