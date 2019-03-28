@@ -39,7 +39,6 @@ export class LessonMediaService {
 			return from([filePath]);
 		}
 
-		console.log(`creating download: ${knownFolders.documents().path}, ${lesson.id}`);
 		let id = this.downloader.createDownload({
 			path: knownFolders.documents().path,
 			url: lesson.source
