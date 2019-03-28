@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Lesson } from '../models/dailyLessons';
 import { Observable, from, ReplaySubject } from 'rxjs';
-import { map} from 'rxjs/operators';
+import { map, flatMap} from 'rxjs/operators';
 import { path, knownFolders, File } from 'tns-core-modules/file-system/file-system';
 import { Downloader } from 'nativescript-downloader';
 
@@ -39,15 +39,16 @@ export class LessonMediaService {
 			return from([filePath]);
 		}
 
-		console.log("creating download...");
+		console.log(`creating download: ${knownFolders.documents().path}, ${lesson.id}`);
 		let id = this.downloader.createDownload({
 			path: knownFolders.documents().path,
-			fileName: lesson.id,
 			url: lesson.source
 		});
 
 		return from(this.downloader.start(id)).pipe(
-			map(file => file.path)
+			map(file => File.fromPath(file.path)),
+			flatMap(file => file.rename(lesson.id)),
+			map(() => filePath)
 		);
 	}
 }
