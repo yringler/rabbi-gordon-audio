@@ -9,11 +9,8 @@ import { Downloader } from 'nativescript-downloader';
 	providedIn: 'root'
 })
 export class LessonMediaService {
-	private files: Map<string, ReplaySubject<string>>;
-
-	constructor() {
-		this.files = new Map();
-	}
+	private files: Map<string, ReplaySubject<string>> = new Map();
+	private downloader = new Downloader();
 
 	/**
 	 * @description Ensure that the media referenced by this lesson is downloaded.
@@ -42,14 +39,12 @@ export class LessonMediaService {
 			return from([filePath]);
 		}
 
-		let downloader = new Downloader();
-
-		let download = downloader.createDownload({
+		let id = this.downloader.createDownload({
 			fileName: filePath,
 			url: lesson.source
 		});
 
-		return from(downloader.start(download)).pipe(
+		return from(this.downloader.start(id)).pipe(
 			map(file => file.path)
 		);
 	}

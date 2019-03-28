@@ -10,8 +10,8 @@
             "es6",
             "dom",
             "es2015.iterable"
-		],
-		"noImplicitReturns": true,
+        ],
+        "noImplicitReturns": true,
         "baseUrl": ".",
         "paths": {
             "~/*": [

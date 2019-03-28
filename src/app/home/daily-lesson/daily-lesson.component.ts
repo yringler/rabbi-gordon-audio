@@ -34,6 +34,8 @@ export class DailyLessonComponent implements OnInit {
 	}
 
 	togglePlay() {
-		this.player.toggle(this.fileName);
+		if (this.fileName != null) {
+			this.player.toggle(this.fileName);
+		}
 	}
 }
