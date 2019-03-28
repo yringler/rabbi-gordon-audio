@@ -8,6 +8,5 @@ import { Downloader } from 'nativescript-downloader';
 })
 export class AppComponent implements OnInit {
 	ngOnInit() {
-		Downloader.init();
 	}
 }

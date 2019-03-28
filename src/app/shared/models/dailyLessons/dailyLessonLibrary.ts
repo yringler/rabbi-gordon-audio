@@ -18,7 +18,6 @@ export class DailyStudyLibrary {
      * a single value.
      */
 	query(query?: LessonQuery): DailyLessonTrack[] {
-		debugger;
         if (!query) {
             return this.tracks;
         } 
