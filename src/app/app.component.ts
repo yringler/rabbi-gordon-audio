@@ -1,5 +1,4 @@
 import { Component, OnInit } from "@angular/core";
-import { Downloader } from 'nativescript-downloader';
 
 @Component({
     moduleId: module.id,
