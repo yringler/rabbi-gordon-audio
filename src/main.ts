@@ -2,5 +2,8 @@
 import { platformNativeScriptDynamic } from "nativescript-angular/platform";
 
 import { AppModule } from "./app/app.module";
+import { Downloader } from "nativescript-downloader";
+
+Downloader.init();
 
 platformNativeScriptDynamic().bootstrapModule(AppModule);
