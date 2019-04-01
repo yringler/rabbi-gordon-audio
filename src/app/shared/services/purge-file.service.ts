@@ -17,16 +17,15 @@ export class PurgeFileService {
 		let deletedFilePaths = new Array<string>();
 
 		return zip(
-			from(Folder.fromPath(downloadFolder).getEntities()).pipe(
-				map(file => file.map(file => file.path))
-			),
+			Folder.fromPath(downloadFolder).getEntities(),
 			this.getAllowedMedia()
 		).pipe(
+			// Get files to delete.
+			map(([allFiles, allowedFiles]) => allFiles.filter(file => allowedFiles.indexOf(file.path) != -1)),
+			// Save which files will be deleted.
+			tap(filesToDelete => deletedFilePaths = filesToDelete.map(file => file.path)),
 			// Delete files which aren't allowed.
-			mergeMap((([allFiles, allowedFiles]) => {
-				let filesToDelete = allFiles.filter(file => allowedFiles.indexOf(file) != -1)
-				return zip(...filesToDelete.map(file => File.fromPath(file).remove()));
-			})),
+			mergeMap(filesToDelete => zip(...filesToDelete.map(file => file.remove()))),
 			map(() => deletedFilePaths),
 			catchError(error => {
 				console.log(`Purge error: ${error}`);
