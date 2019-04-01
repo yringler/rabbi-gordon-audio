@@ -5,6 +5,11 @@ import { map, flatMap} from 'rxjs/operators';
 import { path, knownFolders, File } from 'tns-core-modules/file-system/file-system';
 import { Downloader } from 'nativescript-downloader';
 
+/**
+ * @description The folder where media is downloaded to.
+ */
+export const downloadFolder = knownFolders.documents().getFolder("lessons-cache").path;
+
 @Injectable({
 	providedIn: 'root'
 })
@@ -33,14 +38,14 @@ export class LessonMediaService {
 	// Downloads media for given lessons, and saves file object to the lesson.
 	// Uses existing if already downloaded.
 	private loadMedia(lesson: Lesson): Observable<string> {
-		const filePath = path.join(knownFolders.documents().path, lesson.id);
+		const filePath = path.join(downloadFolder, lesson.id);
 
 		if (File.exists(filePath)) {
 			return from([filePath]);
 		}
 
 		let id = this.downloader.createDownload({
-			path: knownFolders.documents().path,
+			path: downloadFolder,
 			url: lesson.source
 		});
 

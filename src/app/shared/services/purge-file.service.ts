@@ -1,36 +1,31 @@
 import { Injectable } from '@angular/core';
-import { AllowedFilesService } from './allowed-files.service';
 import { Observable, from, of } from 'rxjs';
-import { knownFolders } from 'tns-core-modules/file-system/file-system';
+import { path, Folder, File } from 'tns-core-modules/file-system/file-system';
 import { mergeMap, map, catchError, tap } from 'rxjs/operators';
 import { zip } from 'rxjs';
+import { DailyLessonService } from './daily-lesson.service';
+import { downloadFolder } from './lesson-media.service';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class PurgeFileService {
 
-	constructor(private allowedFiles: AllowedFilesService) { }
+	constructor(private lessonService: DailyLessonService) { }
 
 	purge(): Observable<string[]> {
 		let deletedFilePaths = new Array<string>();
 
 		return zip(
-			from(knownFolders.documents().getEntities()),
-			this.allowedFiles.getAllowedFiles()
+			from(Folder.fromPath(downloadFolder).getEntities()).pipe(
+				map(file => file.map(file => file.path))
+			),
+			this.getAllowedMedia()
 		).pipe(
 			// Delete files which aren't allowed.
 			mergeMap((([allFiles, allowedFiles]) => {
-				let deletingFiles$ = new Array<Observable<any>>();
-				
-				allFiles.forEach(file => {
-					if (allowedFiles.indexOf(file.path) == -1) {
-						deletingFiles$.push(from(file.remove()));
-						deletedFilePaths.push(file.path);
-					}
-				});
-
-				return zip(...deletingFiles$);
+				let filesToDelete = allFiles.filter(file => allowedFiles.indexOf(file) != -1)
+				return zip(...filesToDelete.map(file => File.fromPath(file).remove()));
 			})),
 			map(() => deletedFilePaths),
 			catchError(error => {
@@ -38,5 +33,18 @@ export class PurgeFileService {
 				return of([]);
 			})
 		)
+	}
+
+	private getAllowedMedia(): Observable<string[]> {
+		return this.lessonService.getLibrary().pipe(
+			// Get the lessons which are still current.
+			map(library => library.query({ date: -1, duration: 4 })),
+			// Map each track to array of file names.
+			map(tracks => tracks.map(tracks => tracks.days.map(day => day.id))),
+			// Flatten the 2 dimensional array.
+			map(tracks => new Array<string>().concat(...tracks)),
+			// Get full file paths.
+			map(fileNames => fileNames.map(name => path.join(downloadFolder, name)))
+		);
 	}
 }
