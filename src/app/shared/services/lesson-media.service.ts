@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Lesson } from '../models/dailyLessons';
-import { Observable, from, ReplaySubject } from 'rxjs';
-import { map, flatMap} from 'rxjs/operators';
+import { Observable, from, ReplaySubject, of } from 'rxjs';
+import { map, flatMap, catchError, tap, retry} from 'rxjs/operators';
 import { path, knownFolders, File } from 'tns-core-modules/file-system/file-system';
-import { Downloader } from 'nativescript-downloader';
+import { DownloadProgress } from "nativescript-download-progress"
 
 /**
  * @description The folder where media is downloaded to.
@@ -15,7 +15,6 @@ export const downloadFolder = knownFolders.documents().getFolder("lessons-cache"
 })
 export class LessonMediaService {
 	private files: Map<string, ReplaySubject<string>> = new Map();
-	private downloader = new Downloader();
 
 	/**
 	 * @description Ensure that the media referenced by this lesson is downloaded.
@@ -44,15 +43,13 @@ export class LessonMediaService {
 			return from([filePath]);
 		}
 
-		let id = this.downloader.createDownload({
-			path: downloadFolder,
-			url: lesson.source
-		});
-
-		return from(this.downloader.start(id)).pipe(
-			map(file => File.fromPath(file.path)),
-			flatMap(file => file.rename(lesson.id)),
-			map(() => filePath)
+		return from(new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
+			catchError(err => {
+				console.log(`Download error: ${JSON.stringify(err)}`);
+				return of(File.exists(filePath) ? File.fromPath(filePath) : null);
+			}),
+			tap(file => console.log(`downloaded to: ${file && file.path}`)),
+			map(file => file && file.path),
 		);
 	}
 }
