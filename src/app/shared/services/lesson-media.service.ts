@@ -45,10 +45,17 @@ export class LessonMediaService {
 
 		return from(new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
 			// I observed that sometimes there will be an error. The download manager has concurrency issues.
+			// Known bug: sometimes this won't work, needs to restart app.
 			retry(3),
 			catchError(err => {
 				// I observed that err is always an empty object.
 				console.log(`Download error: ${JSON.stringify(err)}`);
+
+				if (File.exists(filePath)) {
+					console.log(`deleted: ${filePath}`);
+					File.fromPath(filePath).removeSync();
+				}
+
 				return of(null);
 			}),
 			tap(file => console.log(`downloaded to: ${file && file.path}`)),
