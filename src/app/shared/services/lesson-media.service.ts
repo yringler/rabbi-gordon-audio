@@ -44,6 +44,7 @@ export class LessonMediaService {
 		}
 
 		return from(new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
+			// I observed that sometimes there will be an error. The download manager has concurrency issues.
 			retry(3),
 			catchError(err => {
 				// I observed that err is always an empty object.
