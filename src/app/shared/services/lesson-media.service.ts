@@ -44,12 +44,11 @@ export class LessonMediaService {
 		}
 
 		return from(new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
+			retry(3),
 			catchError(err => {
 				// I observed that err is always an empty object.
 				console.log(`Download error: ${JSON.stringify(err)}`);
-				// I observed that sometimes an error is caught, but when the app is restarted the
-				// file is present. Therefor, here I check if the error is really an error.
-				return of(File.exists(filePath) ? File.fromPath(filePath) : null);
+				return of(null);
 			}),
 			tap(file => console.log(`downloaded to: ${file && file.path}`)),
 			map(file => file && file.path),
