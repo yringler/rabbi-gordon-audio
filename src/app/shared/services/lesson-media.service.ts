@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Lesson } from '../models/dailyLessons';
-import { Observable, from, ReplaySubject, of } from 'rxjs';
-import { map, flatMap, catchError, tap, retry} from 'rxjs/operators';
+import { Observable, from, ReplaySubject, race } from 'rxjs';
+import { map, catchError, tap, retry, mergeMap} from 'rxjs/operators';
 import { path, knownFolders, File } from 'tns-core-modules/file-system/file-system';
 import { DownloadProgress } from "nativescript-download-progress"
 
@@ -44,22 +44,27 @@ export class LessonMediaService {
 		}
 
 		return from(new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
-			// I observed that sometimes there will be an error. The download manager has concurrency issues.
-			// Known bug: sometimes this won't work, needs to restart app.
-			retry(3),
-			catchError(err => {
+			catchError((err, caught) => {
 				// I observed that err is always an empty object.
 				console.log(`Download error: ${JSON.stringify(err)}`);
 
-				if (File.exists(filePath)) {
-					console.log(`deleted: ${filePath}`);
-					File.fromPath(filePath).removeSync();
-				}
+				this.safeDelete(filePath);
 
-				return of(null);
+				return race(Array.from(this.files.values())).pipe(
+					mergeMap(() => caught),
+					tap(() => console.log("recovered from error."), () => this.safeDelete(filePath))
+				)
 			}),
+			retry(4),
 			tap(file => console.log(`downloaded to: ${file && file.path}`)),
 			map(file => file && file.path),
 		);
+	}
+
+	private safeDelete(filePath: string) {
+		if (File.exists(filePath)) {
+			console.log(`deleted: ${filePath}`);
+			File.fromPath(filePath).removeSync();
+		}
 	}
 }
