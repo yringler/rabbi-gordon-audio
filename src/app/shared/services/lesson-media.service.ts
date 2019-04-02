@@ -39,20 +39,21 @@ export class LessonMediaService {
 	private loadMedia(lesson: Lesson): Observable<string> {
 		const filePath = path.join(downloadFolder, lesson.id);
 
+		// to replicate bug possible bug in download-progress, always delete media on app start.
 		if (File.exists(filePath)) {
-			return from([filePath]);
+			File.fromPath(filePath).removeSync();
 		}
 
 		return from(new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
 			catchError(err => {
 				// I observed that err is always an empty object.
 				console.log(`Download error: ${JSON.stringify(err)}`);
-				// I observed that sometimes an error is caught, but when the app is restarted the
-				// file is present. Therefor, here I check if the error is really an error.
-				return of(File.exists(filePath) ? File.fromPath(filePath) : null);
+
+				return of(null);
 			}),
 			tap(file => console.log(`downloaded to: ${file && file.path}`)),
 			map(file => file && file.path),
+			tap(file => { if (file == null) console.log(`file is null: ${lesson.id}`) })
 		);
 	}
 }
