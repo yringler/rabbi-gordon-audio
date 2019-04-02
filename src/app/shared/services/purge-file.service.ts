@@ -6,6 +6,23 @@ import { zip } from 'rxjs';
 import { DailyLessonService } from './daily-lesson.service';
 import { downloadFolder } from './lesson-media.service';
 
+/**
+ * @description Check if item is contained in the array.
+ */
+function containedIn<T>(array: Array<T>, item: T): boolean {
+	return array.indexOf(item) != -1;
+}
+
+/**
+ * @description Remove all bad items from the array.
+ * @param all All items.
+ * @param bad Items which we don't want.
+ * @returns Array with only good items.
+ */
+function removeFrom<T>(all: Array<T>, bad: Array<T>): Array<T> {
+	return all.filter(item => !containedIn(bad, item));
+}
+
 @Injectable({
 	providedIn: 'root'
 })
@@ -21,11 +38,11 @@ export class PurgeFileService {
 			this.getAllowedMedia()
 		).pipe(
 			// Get files to delete.
-			map(([allFiles, allowedFiles]) => allFiles.filter(file => allowedFiles.indexOf(file.path) != -1)),
+			map(([allFiles, allowedFiles]) => removeFrom(allFiles.map(file => file.path), allowedFiles)),
 			// Save which files will be deleted.
-			tap(filesToDelete => deletedFilePaths = filesToDelete.map(file => file.path)),
+			tap(filesToDelete => deletedFilePaths = filesToDelete),
 			// Delete files which aren't allowed.
-			mergeMap(filesToDelete => zip(...filesToDelete.map(file => file.remove()))),
+			mergeMap(filesToDelete => zip(...filesToDelete.map(file => File.fromPath(file).remove()))),
 			map(() => deletedFilePaths),
 			catchError(error => {
 				console.log(`Purge error: ${error}`);
