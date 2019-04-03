@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Lesson } from '../models/dailyLessons';
-import { Observable, from, ReplaySubject, of } from 'rxjs';
-import { map, flatMap, catchError, tap, retry} from 'rxjs/operators';
+import { Observable, from, ReplaySubject, of, zip, concat } from 'rxjs';
+import { map, flatMap, catchError, tap, retry, mergeMap} from 'rxjs/operators';
 import { path, knownFolders, File } from 'tns-core-modules/file-system/file-system';
 import { DownloadProgress } from "nativescript-download-progress"
 
@@ -27,8 +27,18 @@ export class LessonMediaService {
 		}
 
 		let mediaSubject$ = new ReplaySubject<string>();
+		let media$ = this.loadMedia(lesson);
 
-		this.loadMedia(lesson).subscribe(mediaSubject$);
+		// #11, #12: The current downloader seems to have issues with concurent downloads.
+		// so wait untill all pending downloads are completed before doing the next one.
+		if (this.files.size > 0) {
+			concat(
+				zip(Array.from(this.files.values())),
+				media$
+			).subscribe(mediaSubject$);
+		} else {
+			media$.subscribe(mediaSubject$);
+		}
 
 		this.files.set(key, mediaSubject$);
 		return this.files.get(key);
