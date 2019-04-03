@@ -27,7 +27,12 @@ export class DailyStudyLibrary {
         // Filter lesson type.
         if (query.type) {
             queriedTracks = this.tracks.filter(track => track.type == query.type);
-        }
+		}
+
+		// If a duration is specified without a date, default to today
+		if (query.duration != null && query.date == null) {
+			query.date = 0;
+		}
 
         // Filter date.
         if (query.date != null) {
