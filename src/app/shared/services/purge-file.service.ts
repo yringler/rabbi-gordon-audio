@@ -47,6 +47,10 @@ export class PurgeFileService {
 			// Delete files which aren't allowed.
 			mergeMap(filesToDelete => zip(...filesToDelete.map(file => File.fromPath(file).remove()))),
 			map(() => deletedFilePaths),
+			// Remove files to be delted from manifest.
+			tap((filesToDelete) => {
+				this.mediaManifestService.removeWhere(item => filesToDelete.find(bad => item.path == bad) != null)
+			}),
 			catchError(error => {
 				console.log(`Purge error: ${error}`);
 				return of([]);

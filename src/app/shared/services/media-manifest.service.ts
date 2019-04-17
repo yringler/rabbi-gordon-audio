@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Observable, from, ReplaySubject, of } from 'rxjs';
+import { Observable, from, ReplaySubject, of, interval } from 'rxjs';
 import { knownFolders } from 'tns-core-modules/file-system/file-system';
-import { concatMap, map, tap, catchError, first } from 'rxjs/operators';
+import { concatMap, map, tap, catchError, first, debounce } from 'rxjs/operators';
 
 /**
  * @description An item which was fully downloaded.
@@ -42,6 +42,7 @@ export class MediaManifestService {
 
     // Whenever the manifest is updated, save changes to file.
     this.downloadManifest$.pipe(
+      debounce(() => interval(1000)),
       concatMap((manifest) => this.manifestFile.writeText(JSON.stringify(manifest)))
     );
   }
@@ -69,12 +70,17 @@ export class MediaManifestService {
     this.downloadManifest$.next(this.downloadManifest);
   }
 
-  removeItem(id: string) {
+  removeId(id: string) {
     let indexToRemove = this.downloadManifest.findIndex(item => item.id == id);
 
     if (indexToRemove > -1) {
       this.downloadManifest.splice(indexToRemove, 1);
       this.downloadManifest$.next(this.downloadManifest);
     }
+  }
+
+  removeWhere(shouldRemove: (item: DownloadedItem) => boolean) {
+    this.downloadManifest = this.downloadManifest.filter(item => !shouldRemove(item));
+    this.downloadManifest$.next(this.downloadManifest);
   }
 }
