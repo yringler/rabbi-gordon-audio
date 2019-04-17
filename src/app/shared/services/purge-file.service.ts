@@ -76,6 +76,10 @@ export class PurgeFileService {
 		).pipe(
 			// Only files which were fully downloaded are allowed.
 			map(([allowedFiles, downloadManifest]) => {
+				if (downloadManifest.length == 0) {
+					return allowedFiles;
+				}
+				
 				return allowedFiles.filter(allowedFile => downloadManifest.find(downloadedItem => {
 					return downloadedItem.path == allowedFile
 				}))

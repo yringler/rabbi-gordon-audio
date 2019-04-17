@@ -36,8 +36,8 @@ export class MediaManifestService {
       first(),
       map(text => JSON.parse(text)),
       // If the json parsing fails (e.g. if the file is empty)
-      // return null.
-      catchError(() => of([null]))
+      // return an empty array.
+      catchError(() => of([]))
     ).subscribe(this.downloadManifest$);
 
     // Whenever the manifest is updated, save changes to file.
