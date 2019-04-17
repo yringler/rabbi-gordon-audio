@@ -5,6 +5,7 @@ import { mergeMap, map, catchError, tap } from 'rxjs/operators';
 import { zip } from 'rxjs';
 import { DailyLessonService } from './daily-lesson.service';
 import { downloadFolder } from './lesson-media.service';
+import { MediaManifestService } from './media-manifest.service';
 
 /**
  * @description Check if item is contained in the array.
@@ -28,7 +29,9 @@ function removeFrom<T>(all: Array<T>, bad: Array<T>): Array<T> {
 })
 export class PurgeFileService {
 
-	constructor(private lessonService: DailyLessonService) { }
+	constructor(
+		private lessonService: DailyLessonService,
+		private mediaManifestService: MediaManifestService) { }
 
 	purge(): Observable<string[]> {
 		let deletedFilePaths = new Array<string>();
@@ -52,15 +55,27 @@ export class PurgeFileService {
 	}
 
 	private getAllowedMedia(): Observable<string[]> {
-		return this.lessonService.getLibrary().pipe(
-			// Get the lessons which are still current.
-			map(library => library.query({ date: -1, duration: 4 })),
-			// Map each track to array of file names.
-			map(tracks => tracks.map(tracks => tracks.days.map(day => day.id))),
-			// Flatten the 2 dimensional array.
-			map(tracks => new Array<string>().concat(...tracks)),
-			// Get full file paths.
-			map(fileNames => fileNames.map(name => path.join(downloadFolder, name)))
+		return zip(
+			// Get allowed files.
+			this.lessonService.getLibrary().pipe(
+				// Get the lessons which are still current.
+				map(library => library.query({ date: -1, duration: 4 })),
+				// Map each track to array of file names.
+				map(tracks => tracks.map(tracks => tracks.days.map(day => day.id))),
+				// Flatten the 2 dimensional array.
+				map(tracks => new Array<string>().concat(...tracks)),
+				// Get full file paths.
+				map(fileNames => fileNames.map(name => path.join(downloadFolder, name)))
+			),
+			// Get downloaded files.
+			this.mediaManifestService.getManifest()
+		).pipe(
+			// Only files which were fully downloaded are allowed.
+			map(([allowedFiles, downloadManifest]) => {
+				return allowedFiles.filter(allowedFile => downloadManifest.find(downloadedItem => {
+					return downloadedItem.path == allowedFile
+				}))
+			})
 		);
 	}
 }

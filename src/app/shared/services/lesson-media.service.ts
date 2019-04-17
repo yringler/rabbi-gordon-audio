@@ -5,6 +5,7 @@ import { map, flatMap, catchError, tap, retry, mergeMap} from 'rxjs/operators';
 import { path, knownFolders, File } from 'tns-core-modules/file-system/file-system';
 import { DownloadProgress } from "nativescript-download-progress"
 import { DailyLessonService } from './daily-lesson.service';
+import { MediaManifestService } from './media-manifest.service';
 
 /**
  * @description The folder where media is downloaded to.
@@ -17,7 +18,10 @@ export const downloadFolder = knownFolders.documents().getFolder("lessons-cache"
 export class LessonMediaService {
 	private files: Map<string, ReplaySubject<string>> = new Map();
 
-	constructor(private dailyLessonService: DailyLessonService) { }
+	constructor(
+		private dailyLessonService: DailyLessonService,
+		private mediaManifestService: MediaManifestService
+		) { }
 	
 	/**
 	 * @description Load files which are used by the referenced query. Use case: Load files which we don't need
@@ -58,14 +62,18 @@ export class LessonMediaService {
 		return this.files.get(key);
 	}
 
-	// Downloads media for given lessons, and saves file object to the lesson.
+	// Download media for given lessons.
 	// Uses existing if already downloaded.
 	private loadMedia(lesson: Lesson): Observable<string> {
-		const filePath = path.join(downloadFolder, lesson.id);
+		return this.mediaManifestService.getItem(lesson.id).pipe(
+			mergeMap(downloadItem => {
+				return downloadItem ?  of(downloadItem.path): this.downloadLesson(lesson);
+			})
+		);
+	}
 
-		if (File.exists(filePath)) {
-			return from([filePath]);
-		}
+	private downloadLesson(lesson:Lesson): Observable<string>{
+		const filePath = path.join(downloadFolder, lesson.id);
 
 		return from(new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
 			// Known bug: sometimes this won't work, needs to restart app.
@@ -78,9 +86,14 @@ export class LessonMediaService {
 					File.fromPath(filePath).removeSync();
 				}
 
-				return of(null);
+				return of(<File>null);
 			}),
 			tap(file => console.log(`downloaded to: ${file && file.path}`)),
+			tap(file => file && this.mediaManifestService.registerItem({
+				id: lesson.id,
+				url: lesson.source,
+				path: file.path
+			})),
 			map(file => file && file.path),
 		);
 	}
