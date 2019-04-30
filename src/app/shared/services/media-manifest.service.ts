@@ -24,23 +24,24 @@ export class DownloadedItem {
 	providedIn: 'root'
 })
 export class MediaManifestService {
-	private manifestFile = knownFolders.documents().getFile("downloadManifest");
 	private downloadManifest: DownloadedItem[] = [];
 	private downloadManifest$: ReplaySubject<DownloadedItem[]>;
+	private manifestFile = knownFolders.documents().getFile("downloadManifest");
 
 	constructor() {
+		let self = this;
 		this.downloadManifest$ = new ReplaySubject;
 
 		// Whenever the manifest is updated, save changes to file.
 		this.downloadManifest$.pipe(
 			debounce(() => interval(250)),
 			concatMap(manifest => {
-				return this.manifestFile.writeText(JSON.stringify(manifest));
+				return self.manifestFile.writeText(JSON.stringify(manifest));
 			})
-		)
+		).subscribe()
 
 		// Seed the manifest from saved contents of file.
-		from(this.manifestFile.readText()).pipe(
+		from(self.manifestFile.readText()).pipe(
 			map(text => {
 				return JSON.parse(text);
 			}),
@@ -48,8 +49,8 @@ export class MediaManifestService {
 			// return an empty array.
 			catchError(() => of([]))
 		).subscribe(manifest => {
-			this.downloadManifest.concat(manifest);
-			this.downloadManifest$.next(this.downloadManifest);
+			self.downloadManifest.push(...manifest);
+			self.downloadManifest$.next(self.downloadManifest);
 		});
 	}
 
