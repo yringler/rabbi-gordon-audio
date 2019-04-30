@@ -88,14 +88,14 @@ export class LessonMediaService {
 		const filePath = path.join(downloadFolder, `${lesson.id}.mp3`);
 		
 		return defer(() => new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
-			retry(3),
+			tap(() => console.log(`Attempting download: ${filePath} from ${lesson.source}`)),
 			// Known bug: sometimes download fails.
 			catchError(err => {
 				// I observed that err is -always- usually an empty object.
 				console.log(`Download error (from ${lesson.source}): ${JSON.stringify(err)}`);
-
-				return of(<File>null);
+				return throwError(err);
 			}),
+			retry(3),
 			tap(file => console.log(`downloaded to: ${file && file.path}`)),
 			tap(file => file && this.mediaManifestService.registerItem({
 				id: lesson.id,
