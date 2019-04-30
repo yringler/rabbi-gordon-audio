@@ -73,9 +73,16 @@ export class LessonMediaService {
 	}
 
 	private downloadLesson(lesson:Lesson): Observable<string>{
-		const filePath = path.join(downloadFolder, lesson.id);
+		const filePath = path.join(downloadFolder, `${lesson.id}.mp3`);
 
 		return from(new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
+			tap(file => console.log(`downloaded to: ${file && file.path}`)),
+			tap(file => file && this.mediaManifestService.registerItem({
+				id: lesson.id,
+				url: lesson.source,
+				path: file.path
+			})),
+			map(file => file && file.path),
 			// Known bug: sometimes this won't work, needs to restart app.
 			catchError(err => {
 				// I observed that err is always an empty object.
@@ -86,15 +93,8 @@ export class LessonMediaService {
 					File.fromPath(filePath).removeSync();
 				}
 
-				return of(<File>null);
-			}),
-			tap(file => console.log(`downloaded to: ${file && file.path}`)),
-			tap(file => file && this.mediaManifestService.registerItem({
-				id: lesson.id,
-				url: lesson.source,
-				path: file.path
-			})),
-			map(file => file && file.path),
+				return of(<string>null);
+			})
 		);
 	}
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, from, ReplaySubject, of, interval } from 'rxjs';
 import { knownFolders } from 'tns-core-modules/file-system/file-system';
-import { concatMap, map, tap, catchError, first, debounce } from 'rxjs/operators';
+import { concatMap, map, tap, catchError, first, debounce, switchMap } from 'rxjs/operators';
 
 /**
  * @description An item which was fully downloaded.
@@ -31,20 +31,27 @@ export class MediaManifestService {
   constructor() {
     this.downloadManifest$ = new ReplaySubject;
 
+    // Whenever the manifest is updated, save changes to file.
+    this.downloadManifest$.pipe(
+      debounce(() => interval(250)),
+      concatMap(manifest => {
+        return this.manifestFile.writeText(JSON.stringify(manifest));
+      })
+    )
+
     // Seed the manifest from saved contents of file.
     from(this.manifestFile.readText()).pipe(
       first(),
-      map(text => JSON.parse(text)),
+      map(text => {
+        return JSON.parse(text);
+      }),
       // If the json parsing fails (e.g. if the file is empty)
       // return an empty array.
       catchError(() => of([]))
-    ).subscribe(this.downloadManifest$);
-
-    // Whenever the manifest is updated, save changes to file.
-    this.downloadManifest$.pipe(
-      debounce(() => interval(1000)),
-      concatMap((manifest) => this.manifestFile.writeText(JSON.stringify(manifest)))
-    );
+    ).subscribe(manifest => {
+        this.downloadManifest.concat(manifest);
+        this.downloadManifest$.next(this.downloadManifest);
+    });
   }
 
   /**
@@ -56,7 +63,6 @@ export class MediaManifestService {
 
   getItem(id:string): Observable<DownloadedItem> {
     return this.downloadManifest$.pipe(
-      first(),
       map(items => items && items.find(item => item.id == id))
     )
   }
