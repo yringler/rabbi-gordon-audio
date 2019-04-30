@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Lesson, LessonQuery } from '../models/dailyLessons';
 import { Observable, from, ReplaySubject, of, Subject, timer, throwError, defer } from 'rxjs';
-import { map, catchError, tap, mergeMap, concatMap, retryWhen, take, delay } from 'rxjs/operators';
+import { map, catchError, tap, mergeMap, concatMap, retryWhen, take, delay, retry } from 'rxjs/operators';
 import { path, knownFolders, File } from 'tns-core-modules/file-system/file-system';
 import { DownloadProgress } from "nativescript-download-progress"
 import { DailyLessonService } from './daily-lesson.service';
@@ -88,10 +88,7 @@ export class LessonMediaService {
 		const filePath = path.join(downloadFolder, `${lesson.id}.mp3`);
 		
 		return defer(() => new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
-			retryWhen(() => timer(1000).pipe(
-				tap(() => console.log("Download error occurred")),
-				take(3)
-			)),
+			retry(3),
 			// Known bug: sometimes download fails.
 			catchError(err => {
 				// I observed that err is -always- usually an empty object.
