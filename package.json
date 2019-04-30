@@ -1,10 +1,10 @@
 {
   "nativescript": {
     "id": "org.nativescript.RabbiGordonAudio",
-    "tns-ios": {
-      "version": "5.2.0"
-    },
     "tns-android": {
+      "version": "5.3.1"
+    },
+    "tns-ios": {
       "version": "5.3.1"
     }
   },
@@ -21,28 +21,24 @@
     "@angular/platform-browser": "~7.2.0",
     "@angular/platform-browser-dynamic": "~7.2.0",
     "@angular/router": "~7.2.0",
-    "@types/jasmine": "^3.3.9",
     "date-fns": "^1.30.1",
-    "nativescript-angular": "^7.2.3",
+    "nativescript-angular": "~7.2.0",
     "nativescript-audio": "^5.0.1",
     "nativescript-download-progress": "^1.1.0",
     "nativescript-theme-core": "~1.0.4",
     "reflect-metadata": "~0.1.12",
-    "rxjs": "^6.3.3",
-    "tns-android": "^5.3.0",
-    "tns-core-modules": "^5.3.1",
-    "tns-ios": "^5.3.0",
-    "typescript": "~3.1.1",
-    "zone.js": "^0.8.4"
+    "rxjs": "~6.3.0",
+    "tns-core-modules": "~5.3.0",
+    "zone.js": "~0.8.26"
   },
   "devDependencies": {
     "@angular/compiler-cli": "~7.2.0",
     "@nativescript/schematics": "~0.5.0",
     "@ngtools/webpack": "~7.2.0",
-    "nativescript-dev-typescript": "^0.9.0",
-    "nativescript-dev-webpack": "^0.21.2",
-    "tns-platform-declarations": "^5.3.1"
+    "@types/jasmine": "^3.3.12",
+    "nativescript-dev-typescript": "~0.9.0",
+    "nativescript-dev-webpack": "~0.21.0"
   },
-  "gitHead": "59b6da006346fedb5bb201fcc9cd7d204a69a82f",
+  "gitHead": "803cec054c44c99eaa59cdc267993e6346f6cb3a",
   "readme": "NativeScript Application"
 }

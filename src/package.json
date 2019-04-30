@@ -1,9 +1,6 @@
 {
-    "main": "main.js",
-    "android": {
-        "v8Flags": "--expose_gc"
-    },
-    "dependencies": {
-        "npm": "^6.9.0"
-    }
+  "main": "main.js",
+  "android": {
+    "v8Flags": "--expose_gc"
+  }
 }
