@@ -15,12 +15,24 @@ const dataSettingId = "has-data-perm";
 export class NetworkPermissionService {
 	private networkPermission$: ReplaySubject<boolean> = new ReplaySubject();
 
+	/**
+	 * @description Emits whenever permission is requested to download over mobile data.
+	 */
+	private permissionRequested$: ReplaySubject<null> = new ReplaySubject();
+
 	constructor() {
 		this.networkPermission$.next(NetworkPermissionService.getPermission());
 
 		startMonitoring(connection => {
 			this.networkPermission$.next(NetworkPermissionService.getPermission(connection));
 		});
+	}
+
+	/**
+	 * @description Announce that you want to download over data.
+	 */
+	requestPermission() {
+		this.permissionRequested$.next();
 	}
 
 	getPermission(): Observable<boolean> {
@@ -47,8 +59,6 @@ export class NetworkPermissionService {
 		switch (connection) {
 			case connectionType.wifi:
 				return true;
-			case connectionType.none:
-				return false;
 			case connectionType.mobile:
 				return hasKey(dataSettingId) ? getBoolean(dataSettingId) : null;
 			default:

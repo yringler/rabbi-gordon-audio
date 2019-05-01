@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Lesson, LessonQuery } from '../models/dailyLessons';
-import { Observable, from, ReplaySubject, of, Subject, timer, throwError, defer } from 'rxjs';
-import { map, catchError, tap, mergeMap, concatMap, retryWhen, take, delay, retry, switchMap, skipWhile, first } from 'rxjs/operators';
-import { path, knownFolders, File } from 'tns-core-modules/file-system/file-system';
+import { Observable,  ReplaySubject, of, Subject, throwError, defer } from 'rxjs';
+import { map, catchError, tap, mergeMap, concatMap, retry, switchMap, skipWhile, first } from 'rxjs/operators';
+import { path, knownFolders } from 'tns-core-modules/file-system/file-system';
 import { DownloadProgress } from "nativescript-download-progress"
 import { DailyLessonService } from './daily-lesson.service';
 import { MediaManifestService } from './media-manifest.service';
@@ -108,6 +108,11 @@ export class LessonMediaService {
 		);
 
 		return this.networkPermissionService.getPermission().pipe(
+			tap(permission => {
+				if (!permission) {
+					this.networkPermissionService.requestPermission();
+				}
+			}),
 			skipWhile(canDownload => !canDownload),
 			first(),
 			switchMap(() => download$)
