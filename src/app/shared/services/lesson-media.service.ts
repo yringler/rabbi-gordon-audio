@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Lesson, LessonQuery } from '../models/dailyLessons';
 import { Observable, from, ReplaySubject, of, Subject, timer, throwError, defer } from 'rxjs';
-import { map, catchError, tap, mergeMap, concatMap, retryWhen, take, delay, retry } from 'rxjs/operators';
+import { map, catchError, tap, mergeMap, concatMap, retryWhen, take, delay, retry, switchMap, skipWhile, first } from 'rxjs/operators';
 import { path, knownFolders, File } from 'tns-core-modules/file-system/file-system';
 import { DownloadProgress } from "nativescript-download-progress"
 import { DailyLessonService } from './daily-lesson.service';
 import { MediaManifestService } from './media-manifest.service';
+import { NetworkPermissionService } from './network-permission.service';
 
 /**
  * @description The folder where media is downloaded to.
@@ -21,7 +22,8 @@ export class LessonMediaService {
 
 	constructor(
 		private dailyLessonService: DailyLessonService,
-		private mediaManifestService: MediaManifestService
+		private mediaManifestService: MediaManifestService,
+		private networkPermissionService: NetworkPermissionService
 	) {
 		// #11, #12: The current downloader seems to have issues with concurrent downloads.
 		// so wait until all pending downloads are completed before doing the next one.
@@ -86,8 +88,8 @@ export class LessonMediaService {
 
 	private downloadLesson(lesson: Lesson): Observable<string> {
 		const filePath = path.join(downloadFolder, `${lesson.id}.mp3`);
-		
-		return defer(() => new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
+
+		const download$ = defer(() => new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
 			tap(() => console.log(`Attempting download: ${filePath} from ${lesson.source}`)),
 			// Known bug: sometimes download fails.
 			catchError(err => {
@@ -104,5 +106,11 @@ export class LessonMediaService {
 			})),
 			map(file => file && file.path)
 		);
+
+		return this.networkPermissionService.getPermission().pipe(
+			skipWhile(canDownload => !canDownload),
+			first(),
+			switchMap(() => download$)
+		)
 	}
 }
