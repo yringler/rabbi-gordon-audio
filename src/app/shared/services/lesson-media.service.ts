@@ -109,7 +109,7 @@ export class LessonMediaService {
 
 		return this.networkPermissionService.getPermission().pipe(
 			tap(permission => {
-				if (!permission) {
+				if (permission === null) {
 					this.networkPermissionService.requestPermission();
 				}
 			}),

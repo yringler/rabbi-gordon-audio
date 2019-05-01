@@ -9,6 +9,20 @@ import { distinct } from 'rxjs/operators';
  */
 const dataSettingId = "has-data-perm";
 
+/**
+ * @description Wether you can download, and why not.
+ */
+enum PermissionState {
+	/** @description Download possible. Either on wifi, or a mobile connection and the user allows it. */
+	granted,
+	/** @description On a mobile connection, and the user forbids it. */
+	refused,
+	/** @description On a mobile connection, and we have no idea what the user wants. */
+	unknown,
+	/** @description Download? Now? You kidding? */
+	notPossible
+}
+
 @Injectable({
 	providedIn: 'root'
 })
@@ -35,6 +49,16 @@ export class NetworkPermissionService {
 		this.permissionRequested$.next();
 	}
 
+	/**
+	 * @description Get wether can download.
+	 * 
+	 * True means go ahead.
+	 * 
+	 * False means that the user does not allow download on mobile data.
+	 * 
+	 * Null means either we didn't ask the user yet, so we don't know what he wants,
+	 * or that it doesn't matter, because we don't have an internet connection.
+	 */
 	getPermission(): Observable<boolean> {
 		// Only fire when permission changes.
 		return this.networkPermission$.pipe(
