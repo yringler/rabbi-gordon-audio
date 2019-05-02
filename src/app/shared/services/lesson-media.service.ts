@@ -80,16 +80,33 @@ export class LessonMediaService {
 				if (downloadItem != null) {
 					return of(downloadItem.path);
 				} else {
-					return this.downloadLesson(lesson);
+					return this.downloadLessonWithPermission(lesson);
 				}
 			})
 		);
 	}
 
+	/** @description Waits for permission, then downloads the lesson. */
+	private downloadLessonWithPermission(lesson: Lesson): Observable<string> {
+		return this.networkPermissionService.getPermission().pipe(
+			// Ask for permission from user, if that's the only reason can't download.
+			tap(permission => {
+				if (!permission.canDownload && permission.reason == PermissionReason.unknown) {
+					this.networkPermissionService.requestPermission();
+				}
+			}),
+			// Don't do anything until can download.
+			skipWhile(permission => !permission.canDownload),
+			first(),
+			switchMap(() => this.downloadLesson(lesson))
+		);
+	}
+
+	/** @description Downloads the lesson. */
 	private downloadLesson(lesson: Lesson): Observable<string> {
 		const filePath = path.join(downloadFolder, `${lesson.id}`);
 
-		const download$ = defer(() => new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
+		return defer(() => new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
 			tap(() => console.log(`Attempting download: ${filePath} from ${lesson.source}`)),
 			// Known bug: sometimes download fails.
 			catchError(err => {
@@ -115,18 +132,5 @@ export class LessonMediaService {
 			})),
 			map(file => file && file.path)
 		);
-
-		return this.networkPermissionService.getPermission().pipe(
-			// Ask for permission from user, if that's the only reason can't download.
-			tap(permission => {
-				if (!permission.canDownload && permission.reason == PermissionReason.unknown) {
-					this.networkPermissionService.requestPermission();
-				}
-			}),
-			// Don't do anything until can download.
-			skipWhile(permission => !permission.canDownload),
-			first(),
-			switchMap(() => download$)
-		)
 	}
 }
