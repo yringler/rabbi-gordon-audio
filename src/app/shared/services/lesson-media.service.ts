@@ -7,6 +7,7 @@ import { DownloadProgress } from "nativescript-download-progress"
 import { DailyLessonService } from './daily-lesson.service';
 import { MediaManifestService } from './media-manifest.service';
 import { NetworkPermissionService, PermissionReason } from './network-permission.service';
+import { DownloadProgressService } from './download-progress.service';
 
 /**
  * @description The folder where media is downloaded to.
@@ -23,7 +24,8 @@ export class LessonMediaService {
 	constructor(
 		private dailyLessonService: DailyLessonService,
 		private mediaManifestService: MediaManifestService,
-		private networkPermissionService: NetworkPermissionService
+		private networkPermissionService: NetworkPermissionService,
+		private downloadProgress: DownloadProgressService
 	) {
 		// #11, #12: The current downloader seems to have issues with concurrent downloads.
 		// so wait until all pending downloads are completed before doing the next one.
@@ -105,8 +107,17 @@ export class LessonMediaService {
 		const filePath = path.join(downloadFolder, `${lesson.id}`);
 
 		return defer(() => {
-			console.log(`Attempting download: ${lesson.source}`)
-			return new DownloadProgress().downloadFile(lesson.source, filePath);
+			console.log(`Attempting download: ${lesson.source}`);
+
+			let downloader = new DownloadProgress();
+			downloader.addProgressCallback(progress => {
+				this.downloadProgress.setProgress({
+					progress: progress * 100,
+					url: lesson.source
+				});
+			});
+
+			return downloader.downloadFile(lesson.source, filePath);
 		}).pipe(
 			// Known bug: sometimes download fails.
 			catchError(err => {
