@@ -29,11 +29,9 @@ export class LessonMediaService {
 		// so wait until all pending downloads are completed before doing the next one.
 		this.loadRequest$.pipe(
 			concatMap(([lesson, subject]) => {
-				this.loadMedia(lesson).subscribe(
-					path => subject.next(path)
+				return this.loadMedia(lesson).pipe(
+					tap(path => path && subject.next(path))
 				);
-
-				return of(null);
 			})
 		).subscribe();
 	}
@@ -106,8 +104,10 @@ export class LessonMediaService {
 	private downloadLesson(lesson: Lesson): Observable<string> {
 		const filePath = path.join(downloadFolder, `${lesson.id}`);
 
-		return defer(() => new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
-			tap(() => console.log(`Attempting download: ${filePath} from ${lesson.source}`)),
+		return defer(() => {
+			console.log(`Attempting download: ${lesson.source}`)
+			return new DownloadProgress().downloadFile(lesson.source, filePath);
+		}).pipe(
 			// Known bug: sometimes download fails.
 			catchError(err => {
 				// I observed that err is -always- usually an empty object.
