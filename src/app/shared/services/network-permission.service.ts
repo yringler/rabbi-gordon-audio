@@ -92,7 +92,7 @@ export class NetworkPermissionService {
 		if (connection == connectionType.mobile) {
 			permission.canDownload = hasKey(dataSettingId) ? getBoolean(dataSettingId) : false;
 		} else {
-			permission.canDownload = connection == connectionType.wifi;
+			permission.canDownload = connection != connectionType.none;
 		}
 
 		// Set the download permission reason.
