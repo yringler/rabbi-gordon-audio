@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { ReplaySubject, Observable, BehaviorSubject } from 'rxjs';
 import { connectionType, getConnectionType, startMonitoring } from "tns-core-modules/connectivity";
 import {hasKey, getBoolean, setBoolean} from "tns-core-modules/application-settings";
+import { first } from 'rxjs/operators';
 
 /**
  * @description Id of settings which controls wether the app will download media over mobile data.
@@ -48,10 +49,20 @@ export class NetworkPermissionService {
 	}
 
 	/**
-	 * @description Announce that you want to download over data.
+	 * @description If somewhere in the app wants the users permission, he can announce it by calling this.
+	 * Other places in the app can react by listening for such requests.
+	 * @see getPermissionRequestCheck
 	 */
 	requestPermission() {
 		this.permissionRequested$.next();
+	}
+
+	/**
+	 * @description Wait for somewhere in the app to request permission from the user
+	 * to download over mobile data.
+	 */
+	getPermissionRequestCheck() {
+		return this.permissionRequested$.asObservable().pipe(first());
 	}
 
 	/**
