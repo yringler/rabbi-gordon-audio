@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Lesson, LessonQuery } from '../models/dailyLessons';
-import { Observable,  ReplaySubject, of, Subject, throwError, defer } from 'rxjs';
+import { Observable,  ReplaySubject, of, Subject, throwError, defer, concat } from 'rxjs';
 import { map, catchError, tap, mergeMap, concatMap, retry, switchMap, skipWhile, first } from 'rxjs/operators';
-import { path, knownFolders } from 'tns-core-modules/file-system/file-system';
+import { path, knownFolders, File, } from 'tns-core-modules/file-system/file-system';
 import { DownloadProgress } from "nativescript-download-progress"
 import { DailyLessonService } from './daily-lesson.service';
 import { MediaManifestService } from './media-manifest.service';
-import { NetworkPermissionService } from './network-permission.service';
+import { NetworkPermissionService, PermissionReason } from './network-permission.service';
 
 /**
  * @description The folder where media is downloaded to.
@@ -87,7 +87,7 @@ export class LessonMediaService {
 	}
 
 	private downloadLesson(lesson: Lesson): Observable<string> {
-		const filePath = path.join(downloadFolder, `${lesson.id}.mp3`);
+		const filePath = path.join(downloadFolder, `${lesson.id}`);
 
 		const download$ = defer(() => new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
 			tap(() => console.log(`Attempting download: ${filePath} from ${lesson.source}`)),
@@ -95,7 +95,16 @@ export class LessonMediaService {
 			catchError(err => {
 				// I observed that err is -always- usually an empty object.
 				console.log(`Download error (from ${lesson.source}): ${JSON.stringify(err)}`);
-				return throwError(err);
+
+				if (File.exists(filePath)) {
+					return concat(
+						// If there's a partial, invalid file, delete it.
+						File.fromPath(filePath).remove(),
+						throwError(err)
+					)
+				} else {
+					return throwError(err);
+				}
 			}),
 			retry(3),
 			tap(file => console.log(`downloaded to: ${file && file.path}`)),
@@ -108,12 +117,14 @@ export class LessonMediaService {
 		);
 
 		return this.networkPermissionService.getPermission().pipe(
+			// Ask for permission from user, if that's the only reason can't download.
 			tap(permission => {
-				if (permission === null) {
+				if (!permission.canDownload && permission.reason == PermissionReason.unknown) {
 					this.networkPermissionService.requestPermission();
 				}
 			}),
-			skipWhile(canDownload => !canDownload),
+			// Don't do anything until can download.
+			skipWhile(permission => !permission.canDownload),
 			first(),
 			switchMap(() => download$)
 		)
