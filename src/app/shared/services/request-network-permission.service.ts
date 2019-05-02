@@ -17,7 +17,7 @@ export class RequestNetworkPermissionService {
 
 	requestPermission() {
 		action(
-			"Would you like to download media over your mobile data connection?",
+			"Download media using mobile data connection?",
 			options.cancel,
 			[options.always, options.never]
 		).then(result => {

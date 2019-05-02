@@ -2,7 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { DailyLessonTrack } from "../shared/models/dailyLessons";
 import { Observable } from "rxjs";
 import { DailyLessonService } from "../shared/services/daily-lesson.service";
-import { map, tap } from "rxjs/operators";
+import { map } from "rxjs/operators";
 import { RequestNetworkPermissionService } from "../shared/services/request-network-permission.service";
 import { NetworkPermissionService } from "../shared/services/network-permission.service";
 
@@ -29,8 +29,12 @@ export class HomeComponent implements OnInit {
 		
 		// If our app ever wants to download something but can't because we don't know if user
 		// allows mobile data downloads, ask.
-		this.networkPermission.getPermissionRequestCheck().pipe(
-			tap(() => this.requestPermission.requestPermission())
-		);
-    }
+		this.networkPermission.getPermissionRequestCheck().subscribe(
+			() => this.requestPermission.requestPermission()
+		)
+	}
+	
+	updatePermissionSetting() {
+		this.requestPermission.requestPermission();
+	}
 }
