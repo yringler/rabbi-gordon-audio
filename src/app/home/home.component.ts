@@ -6,6 +6,7 @@ import { map } from "rxjs/operators";
 import { RequestNetworkPermissionService } from "../shared/services/request-network-permission.service";
 import { NetworkPermissionService } from "../shared/services/network-permission.service";
 import { DownloadProgressService, DownloadProgress } from "../shared/services/download-progress.service";
+import { PlayerProgressService } from "../shared/services/player-progress.service";
 
 @Component({
 	selector: "Home",
@@ -24,6 +25,7 @@ export class HomeComponent implements OnInit {
 		private networkPermission: NetworkPermissionService,
 		private requestPermission: RequestNetworkPermissionService,
 		private downloadProgress: DownloadProgressService,
+		private playerProgress: PlayerProgressService,
 		private zone: NgZone
 	) { }
 
