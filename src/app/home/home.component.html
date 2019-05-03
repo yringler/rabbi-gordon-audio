@@ -1,9 +1,14 @@
 <ActionBar class="action-bar">
-    <Label class="action-bar-title" text="Home"></Label>
+	<ActionItem ios.systemicon="2" android.systemicon="ic_menu_preferences" (tap)="updatePermissionSetting()"></ActionItem>
 </ActionBar>
 
 <StackLayout class="page">
     <daily-lesson
     [track]="track"
-    *ngFor="let track of todaysLessons$ | async"></daily-lesson>
+	*ngFor="let track of todaysLessons$ | async"></daily-lesson>
+	<Progress
+	*ngIf="currentProgress > 0 && currentProgress < 100"
+	[value]="currentProgress"
+	maxvalue="100"
+	></Progress>
 </StackLayout>

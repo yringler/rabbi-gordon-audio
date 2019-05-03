@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Lesson, LessonQuery } from '../models/dailyLessons';
-import { Observable, from, ReplaySubject, of, Subject, timer, throwError, defer } from 'rxjs';
-import { map, catchError, tap, mergeMap, concatMap, retryWhen, take, delay, retry } from 'rxjs/operators';
-import { path, knownFolders, File } from 'tns-core-modules/file-system/file-system';
+import { Observable,  ReplaySubject, of, Subject, throwError, defer, concat } from 'rxjs';
+import { map, catchError, tap, mergeMap, concatMap, retry, switchMap, skipWhile, first } from 'rxjs/operators';
+import { path, knownFolders, File, } from 'tns-core-modules/file-system/file-system';
 import { DownloadProgress } from "nativescript-download-progress"
 import { DailyLessonService } from './daily-lesson.service';
 import { MediaManifestService } from './media-manifest.service';
+import { NetworkPermissionService, PermissionReason } from './network-permission.service';
+import { DownloadProgressService } from './download-progress.service';
 
 /**
  * @description The folder where media is downloaded to.
@@ -21,17 +23,17 @@ export class LessonMediaService {
 
 	constructor(
 		private dailyLessonService: DailyLessonService,
-		private mediaManifestService: MediaManifestService
+		private mediaManifestService: MediaManifestService,
+		private networkPermissionService: NetworkPermissionService,
+		private downloadProgress: DownloadProgressService
 	) {
 		// #11, #12: The current downloader seems to have issues with concurrent downloads.
 		// so wait until all pending downloads are completed before doing the next one.
 		this.loadRequest$.pipe(
 			concatMap(([lesson, subject]) => {
-				this.loadMedia(lesson).subscribe(
-					path => subject.next(path)
+				return this.loadMedia(lesson).pipe(
+					tap(path => path && subject.next(path))
 				);
-
-				return of(null);
 			})
 		).subscribe();
 	}
@@ -78,22 +80,59 @@ export class LessonMediaService {
 				if (downloadItem != null) {
 					return of(downloadItem.path);
 				} else {
-					return this.downloadLesson(lesson);
+					return this.downloadLessonWithPermission(lesson);
 				}
 			})
 		);
 	}
 
+	/** @description Waits for permission, then downloads the lesson. */
+	private downloadLessonWithPermission(lesson: Lesson): Observable<string> {
+		return this.networkPermissionService.getPermission().pipe(
+			// Ask for permission from user, if that's the only reason can't download.
+			tap(permission => {
+				if (!permission.canDownload && permission.reason == PermissionReason.unknown) {
+					this.networkPermissionService.requestPermission();
+				}
+			}),
+			// Don't do anything until can download.
+			skipWhile(permission => !permission.canDownload),
+			first(),
+			switchMap(() => this.downloadLesson(lesson))
+		);
+	}
+
+	/** @description Downloads the lesson. */
 	private downloadLesson(lesson: Lesson): Observable<string> {
-		const filePath = path.join(downloadFolder, `${lesson.id}.mp3`);
-		
-		return defer(() => new DownloadProgress().downloadFile(lesson.source, filePath)).pipe(
-			tap(() => console.log(`Attempting download: ${filePath} from ${lesson.source}`)),
+		const filePath = path.join(downloadFolder, `${lesson.id}`);
+
+		return defer(() => {
+			console.log(`Attempting download: ${lesson.source}`);
+
+			let downloader = new DownloadProgress();
+			downloader.addProgressCallback(progress => {
+				this.downloadProgress.setProgress({
+					progress: progress * 100,
+					url: lesson.source
+				});
+			});
+
+			return downloader.downloadFile(lesson.source, filePath);
+		}).pipe(
 			// Known bug: sometimes download fails.
 			catchError(err => {
 				// I observed that err is -always- usually an empty object.
 				console.log(`Download error (from ${lesson.source}): ${JSON.stringify(err)}`);
-				return throwError(err);
+
+				if (File.exists(filePath)) {
+					return concat(
+						// If there's a partial, invalid file, delete it.
+						File.fromPath(filePath).remove(),
+						throwError(err)
+					)
+				} else {
+					return throwError(err);
+				}
 			}),
 			retry(3),
 			tap(file => console.log(`downloaded to: ${file && file.path}`)),
