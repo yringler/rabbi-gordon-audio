@@ -1,0 +1,6 @@
+<Slider
+*ngIf="progress"
+minvalue="0"
+[maxvalue]="progress.duration"
+(valueChange)="updateProgress($event.object)"
+></Slider>

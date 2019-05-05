@@ -112,7 +112,7 @@ export class LessonMediaService {
 			let downloader = new DownloadProgress();
 			downloader.addProgressCallback(progress => {
 				this.downloadProgress.setProgress({
-					progress: progress * 100,
+					progress: progress,
 					url: lesson.source
 				});
 			});

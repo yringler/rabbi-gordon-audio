@@ -4,9 +4,6 @@ import { Observable } from "rxjs";
 import { DailyLessonService } from "../shared/services/daily-lesson.service";
 import { map } from "rxjs/operators";
 import { RequestNetworkPermissionService } from "../shared/services/request-network-permission.service";
-import { NetworkPermissionService } from "../shared/services/network-permission.service";
-import { DownloadProgressService, DownloadProgress } from "../shared/services/download-progress.service";
-import { PlayerProgressService } from "../shared/services/player-progress.service";
 
 @Component({
 	selector: "Home",
@@ -17,16 +14,9 @@ export class HomeComponent implements OnInit {
 
 	todaysLessons$: Observable<DailyLessonTrack[]>;
 
-	/** @description How far along an ongoing download is. */
-	currentProgress: number;
-
 	constructor(
 		private lessonService: DailyLessonService,
-		private networkPermission: NetworkPermissionService,
-		private requestPermission: RequestNetworkPermissionService,
-		private downloadProgress: DownloadProgressService,
-		private playerProgress: PlayerProgressService,
-		private zone: NgZone
+		private requestPermission: RequestNetworkPermissionService
 	) { }
 
 	ngOnInit(): void {
@@ -35,16 +25,6 @@ export class HomeComponent implements OnInit {
 				return library.query({ date: 0 })
 			})
 		);
-
-		// If our app ever wants to download something but can't because we don't know if user
-		// allows mobile data downloads, ask.
-		this.networkPermission.getPermissionRequestCheck().subscribe(
-			() => this.requestPermission.requestPermission()
-		)
-
-		this.downloadProgress.getProgress().subscribe(progress => {
-			this.zone.run(() => this.currentProgress = progress.progress);
-		})
 	}
 
 	updatePermissionSetting() {

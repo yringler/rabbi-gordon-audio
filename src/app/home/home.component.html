@@ -6,13 +6,5 @@
     <daily-lesson
     [track]="track"
 	*ngFor="let track of todaysLessons$ | async"></daily-lesson>
-	
-	<Progress
-	*ngIf="currentProgress > 0 && currentProgress < 100"
-	[value]="currentProgress"
-	maxvalue="100"
-	></Progress>
-
-	<Progress
-	></Progress>
+	<download-progress></download-progress>
 </StackLayout>
