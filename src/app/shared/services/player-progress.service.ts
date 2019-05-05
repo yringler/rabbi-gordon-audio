@@ -64,9 +64,9 @@ export class PlayerProgressService {
 			this.intervalId = setInterval(() => {
 				self.progress$.next({
 					current: getSeconds(self.player.currentTime),
-					duration: getSeconds(self.duration)
+					duration: self.duration
 				});
-			}, 500);
+			}, 1000);
 		})
 	}
 

@@ -6,5 +6,6 @@
     <daily-lesson
     [track]="track"
 	*ngFor="let track of todaysLessons$ | async"></daily-lesson>
+	<play-progress></play-progress>
 	<download-progress></download-progress>
 </StackLayout>
