@@ -11,6 +11,13 @@ import { Slider} from "tns-core-modules/ui/slider"
 export class PlayProgressComponent implements OnInit {
   duration: number;
   current: number;
+  /** 
+   * @description As the media plays, the Progress component is updated to the current location in the media.
+   * When that happens, the change event is fired.
+   * 
+   * Here, flag wether the change is from normal progress or from user jumping.
+   */
+  changeIsFromProgress: boolean;
 
   constructor(
     private playerProgress: PlayerProgressService,
@@ -18,17 +25,23 @@ export class PlayProgressComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    let self = this;
     this.playerProgress.getProgress().subscribe(
       progress => {
-        self.zone.run(() => {
-          self.duration = progress.duration;
-          self.current = progress.current;
+        this.zone.run(() => {
+          this.duration = progress.duration;
+          this.current = progress.current;
+
+          this.changeIsFromProgress = true;
         });
       });
   }
 
   updateProgress(slider:Slider) {
+    if (this.changeIsFromProgress) {
+      this.changeIsFromProgress = false;
+      return;
+    }
+
     this.playerProgress.seek(slider.value);
   }
 }
