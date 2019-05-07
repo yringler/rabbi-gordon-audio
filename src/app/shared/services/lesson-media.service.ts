@@ -110,7 +110,7 @@ export class LessonMediaService {
 			console.log(`Attempting download: ${lesson.source}`);
 
 			let downloader = new DownloadProgress();
-			downloader.addProgressCallback(progress => {
+			downloader.addProgressCallback((progress: number) => {
 				this.downloadProgress.setProgress({
 					progress: progress,
 					url: lesson.source
