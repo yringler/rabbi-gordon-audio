@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { getJSON } from "tns-core-modules/http";
 import { DailyStudyLibrary, DailyLessonTrack } from '../models/dailyLessons';
-import { Observable, from, concat, BehaviorSubject, ReplaySubject } from 'rxjs';
+import { Observable, from, concat, BehaviorSubject, ReplaySubject, throwError } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import { knownFolders, File, path } from 'tns-core-modules/file-system/file-system';
 
@@ -55,7 +55,7 @@ export class DailyLessonService {
 				// Make sure that file is up to date.
 				tap(library => {
 					if (!library.has({ date: 2 })) {
-						throw "Manifest doesn't have required dates."
+						return throwError("Manifest doesn't have required dates.");
 					}
 				}),
 	
