@@ -11,6 +11,9 @@ export class MediaPlayerService {
 
 	constructor(private progress: PlayerProgressService) {
 		this.player = new TNSPlayer();
+		// #3: don't resume from pause when regains audio focus.
+		// Thank you, @masayoshiadachi (at https://github.com/nstudio/nativescript-audio/issues/148#issuecomment-490522070)
+		this.player.resume = () => {}
 	}
 
 	play(file: string) {
@@ -29,7 +32,7 @@ export class MediaPlayerService {
 			this.progress.pause();
 		} else {
 			if (this.currentFile != null && (requestedFile == null || this.currentFile == requestedFile)) {
-				this.player.resume();
+				this.player.play();
 				this.progress.resume();
 			} else if (requestedFile != null) {
 				this.play(requestedFile);
