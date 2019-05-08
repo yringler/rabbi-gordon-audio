@@ -6,6 +6,7 @@ import { HomeComponent } from "./home.component";
 import { DailyLessonComponent } from './daily-lesson/daily-lesson.component';
 import { DownloadProgressComponent } from './download-progress/download-progress.component';
 import { PlayProgressComponent } from './play-progress/play-progress.component';
+import { PlaypackSpeedComponent } from './playpack-speed/playpack-speed.component';
 
 @NgModule({
     imports: [
@@ -16,7 +17,8 @@ import { PlayProgressComponent } from './play-progress/play-progress.component';
         HomeComponent,
         DailyLessonComponent,
         DownloadProgressComponent,
-        PlayProgressComponent
+        PlayProgressComponent,
+        PlaypackSpeedComponent
     ],
     schemas: [
         NO_ERRORS_SCHEMA
