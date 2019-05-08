@@ -3,16 +3,18 @@ import { Lesson, LessonQuery } from '../models/dailyLessons';
 import { Observable,  ReplaySubject, of, Subject, throwError, defer, concat } from 'rxjs';
 import { map, catchError, tap, mergeMap, concatMap, retry, switchMap, skipWhile, first } from 'rxjs/operators';
 import { path, knownFolders, File, } from 'tns-core-modules/file-system/file-system';
-import { DownloadProgress } from "nativescript-download-progress"
 import { DailyLessonService } from './daily-lesson.service';
 import { MediaManifestService } from './media-manifest.service';
 import { NetworkPermissionService, PermissionReason } from './network-permission.service';
-import { DownloadProgressService } from './download-progress.service';
+import { DownloadProgressService, DownloadState } from './download-progress.service';
+import { DownloadManager } from 'nativescript-downloadmanager';
+
 
 /**
  * @description The folder where media is downloaded to.
  */
-export const downloadFolder = knownFolders.documents().getFolder("lessons-cache").path;
+const downloadFolderName = "lessons-cache";
+export const downloadFolder = knownFolders.documents().getFolder(downloadFolderName).path;
 
 @Injectable({
 	providedIn: 'root'
@@ -20,6 +22,7 @@ export const downloadFolder = knownFolders.documents().getFolder("lessons-cache"
 export class LessonMediaService {
 	private files: Map<string, ReplaySubject<string>> = new Map();
 	private loadRequest$: Subject<[Lesson, Subject<string>]> = new Subject;
+	private downloader: DownloadManager
 
 	constructor(
 		private dailyLessonService: DailyLessonService,
@@ -36,6 +39,8 @@ export class LessonMediaService {
 				);
 			})
 		).subscribe();
+
+		this.downloader = new DownloadManager();
 	}
 
 	/**
@@ -104,44 +109,39 @@ export class LessonMediaService {
 
 	/** @description Downloads the lesson. */
 	private downloadLesson(lesson: Lesson): Observable<string> {
-		const filePath = path.join(downloadFolder, `${lesson.id}`);
-
 		return defer(() => {
 			console.log(`Attempting download: ${lesson.source}`);
 
-			let downloader = new DownloadProgress();
-			downloader.addProgressCallback((progress: number) => {
-				this.downloadProgress.setProgress({
-					progress: progress,
-					url: lesson.source
-				});
-			});
+			this.downloadProgress.setProgress({
+				url: lesson.source,
+				state: DownloadState.ongoing
+			})
+			return new Promise<string>((resolve, reject) => {
+				this.downloader.downloadFile(lesson.source, (succeeded:boolean, uri:string) => {
+					this.downloadProgress.setProgress({
+						url: lesson.source,
+						state: succeeded ? DownloadState.succeeded : DownloadState.failed
+					});
 
-			return downloader.downloadFile(lesson.source, filePath);
+					if (succeeded) {
+						// #23: nativescript-downloadmanager resolves it's pseudo-promise with a URI.
+						// Here, convert to a proper system path.
+						let downloadFilePath = uri.replace("file://", "");
+						downloadFilePath = downloadFilePath.replace(/\//g, path.separator);
+						
+						resolve(downloadFilePath);
+					} else {
+						reject();
+					}
+				}, downloadFolderName, lesson.id);
+			})
 		}).pipe(
-			// Known bug: sometimes download fails.
-			catchError(err => {
-				// I observed that err is -always- usually an empty object.
-				console.log(`Download error (from ${lesson.source}): ${JSON.stringify(err)}`);
-
-				if (File.exists(filePath)) {
-					return concat(
-						// If there's a partial, invalid file, delete it.
-						File.fromPath(filePath).remove(),
-						throwError(err)
-					)
-				} else {
-					return throwError(err);
-				}
-			}),
-			retry(3),
-			tap(file => console.log(`downloaded to: ${file && file.path}`)),
+			tap(file => console.log(`downloaded to: ${file}`)),
 			tap(file => file && this.mediaManifestService.registerItem({
 				id: lesson.id,
 				url: lesson.source,
-				path: file.path
-			})),
-			map(file => file && file.path)
+				path: <string>file
+			}))
 		);
 	}
 }
