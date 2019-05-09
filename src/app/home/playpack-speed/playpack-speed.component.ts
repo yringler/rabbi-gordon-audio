@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MediaPlayerService } from '~/app/shared/services/media-player.service';
-import { FormControl } from '@angular/forms';
+import { FormControl, AbstractControl } from '@angular/forms';
 import { debounceTime, map, distinct } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 
@@ -27,7 +27,6 @@ export class PlaypackSpeedComponent implements OnInit {
 	ngOnInit() {
 		this.speed.valueChanges.pipe(
 			debounceTime(250),
-			distinct(),
 			map(speed => this.getSpeedFromSliderValue(speed))
 		).subscribe(speed => {
 			console.log(speed);
