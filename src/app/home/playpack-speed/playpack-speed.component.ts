@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { MediaPlayerService } from '~/app/shared/services/media-player.service';
-import { FormControl } from '@angular/forms';
-import { debounceTime } from 'rxjs/operators';
+import { FormControl, FormGroup, FormBuilder, AbstractControl } from '@angular/forms';
+import { debounceTime, map, tap } from 'rxjs/operators';
 
 const maxSpeed = 3;
 
@@ -9,29 +9,52 @@ const maxSpeed = 3;
 	selector: 'playpack-speed',
 	templateUrl: './playpack-speed.component.html',
 	styleUrls: ['./playpack-speed.component.css'],
-	moduleId: module.id,
+	moduleId: module.id
 })
 export class PlaypackSpeedComponent implements OnInit {
 	/** @description The maximum value on the slider. The value is converted to a speed. */
 	maxValue = 100;
 
-	speed = new FormControl(this.maxValue / 2);
+	speedForm: FormGroup;
+	speedSlider: AbstractControl;
 
-	currentSpeed: number;
+	constructor(
+		private player: MediaPlayerService,
+		private formBuilder: FormBuilder
+	) {
+		this.speedForm = this.formBuilder.group({
+			speed: [this.getSliderValueFromSpeed(1)]
+		});
 
-	constructor(private player: MediaPlayerService) {
+		this.speedSlider = this.speedForm.controls['speed'];
 	}
 
 	ngOnInit() {
-		this.speed.valueChanges.pipe(
-			debounceTime(250)
+		this.speedSlider.valueChanges.pipe(
+			debounceTime(250),
+			map(speed => this.getSpeedFromSliderValue(speed)),
+			tap(speed => console.log(`speed: ${speed}`))
 		).subscribe(speed => {
-			this.currentSpeed = this.getSpeedFromSliderValue(speed);
-			this.player.setSpeed(this.currentSpeed);
+			(<any>this.player).setSpeed(speed);
 		})
 	}
 
-	private getSpeedFromSliderValue(sliderValue: number) {
+	get currentSpeed(): number {
+		return this.getSpeedFromSliderValue(this.speedSlider.value);
+	}
+
+	resetSpeed() {
+		this.speedSlider.setValue(this.getSliderValueFromSpeed(1));
+	}
+
+	private getSpeedFromSliderValue(sliderValue: number): number {
+		// Return the fraction of the slider speed of the max speed.
 		return sliderValue / this.maxValue * maxSpeed;
+	}
+
+	private getSliderValueFromSpeed(speed: number): number {
+		// The ratio of slider units to speed is 100 slider units to 3 speed units.
+		// Multiply the given speed by that ratio to get slider units.
+		return speed * this.maxValue / maxSpeed;
 	}
 }

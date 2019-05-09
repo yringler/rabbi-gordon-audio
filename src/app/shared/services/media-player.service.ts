@@ -41,4 +41,8 @@ export class MediaPlayerService {
 			}
 		  }
 	}
+
+	setSpeed(speed: number) {
+		this.player.changePlayerSpeed(speed);
+	}
 }

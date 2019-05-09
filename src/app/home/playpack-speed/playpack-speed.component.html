@@ -1,4 +1,5 @@
-<StackLayout orientation="horizontal">
-	<Progress maxvalue="maxValue" [formControl]="speed"></Progress>
-	<label [text]="currentSpeed"></label>
-</StackLayout>
+<GridLayout columns="*,auto,auto" rows="auto" [FormGroup]="speedForm">
+	<Slider row="0" col="0" [maxvalue]="maxValue" formControlName="speed"></Slider>
+	<Label row="0" col="1" class="p-y-10 p-r-10" [text]="currentSpeed + 'x'"></Label>
+	<Button row="0" col="2" text="Reset" (tap)="resetSpeed()"></Button>
+</GridLayout>
