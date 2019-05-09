@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { MediaPlayerService } from '~/app/shared/services/media-player.service';
-import { FormControl, FormGroup, FormBuilder, AbstractControl } from '@angular/forms';
-import { debounceTime, map, tap } from 'rxjs/operators';
+import { FormControl } from '@angular/forms';
+import { debounceTime, map, distinct } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 const maxSpeed = 3;
 
@@ -15,36 +16,33 @@ export class PlaypackSpeedComponent implements OnInit {
 	/** @description The maximum value on the slider. The value is converted to a speed. */
 	maxValue = 100;
 
-	speedForm: FormGroup;
-	speedSlider: AbstractControl;
+	speed: FormControl;
 
-	constructor(
-		private player: MediaPlayerService,
-		private formBuilder: FormBuilder
-	) {
-		this.speedForm = this.formBuilder.group({
-			speed: [this.getSliderValueFromSpeed(1)]
-		});
+	isPlaying: Observable<boolean>;
 
-		this.speedSlider = this.speedForm.controls['speed'];
+	constructor(private player: MediaPlayerService) {
+		this.speed = new FormControl(this.getSliderValueFromSpeed(1));
 	}
 
 	ngOnInit() {
-		this.speedSlider.valueChanges.pipe(
+		this.speed.valueChanges.pipe(
 			debounceTime(250),
-			map(speed => this.getSpeedFromSliderValue(speed)),
-			tap(speed => console.log(`speed: ${speed}`))
+			distinct(),
+			map(speed => this.getSpeedFromSliderValue(speed))
 		).subscribe(speed => {
+			console.log(speed);
 			(<any>this.player).setSpeed(speed);
-		})
+		});
+
+		this.isPlaying = this.player.isPlaying();
 	}
 
 	get currentSpeed(): number {
-		return this.getSpeedFromSliderValue(this.speedSlider.value);
+		return this.getSpeedFromSliderValue(this.speed.value);
 	}
 
 	resetSpeed() {
-		this.speedSlider.setValue(this.getSliderValueFromSpeed(1));
+		this.speed.setValue(this.getSliderValueFromSpeed(1));
 	}
 
 	private getSpeedFromSliderValue(sliderValue: number): number {

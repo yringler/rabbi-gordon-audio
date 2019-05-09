@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { TNSPlayer } from 'nativescript-audio';
 import { PlayerProgressService } from './player-progress.service';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({
 	providedIn: 'root'
@@ -8,6 +9,7 @@ import { PlayerProgressService } from './player-progress.service';
 export class MediaPlayerService {
 	private player: TNSPlayer;
 	private currentFile: string;
+	private isPlaying$: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
 	constructor(private progress: PlayerProgressService) {
 		this.player = new TNSPlayer();
@@ -21,8 +23,12 @@ export class MediaPlayerService {
 
 		this.player.playFromFile({
 			audioFile: file,
-			loop: false
-		}).then(() => this.progress.watch(this.player))
+			loop: false,
+			completeCallback: () => this.isPlaying$.next(false)
+		}).then(() => {
+			this.progress.watch(this.player);
+			this.isPlaying$.next(true);
+		})
 	}
 
 	// Toggle player. If a path is passed in, makes sure that file is playing.
@@ -44,5 +50,9 @@ export class MediaPlayerService {
 
 	setSpeed(speed: number) {
 		this.player.changePlayerSpeed(speed);
+	}
+
+	isPlaying(): Observable<boolean> {
+		return this.isPlaying$.asObservable();
 	}
 }
