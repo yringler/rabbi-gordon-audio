@@ -33,7 +33,7 @@ export class LessonMediaService {
 		// #11, #12: The current downloader seems to have issues with concurrent downloads.
 		// so wait until all pending downloads are completed before doing the next one.
 		this.loadRequest$.pipe(
-			concatMap(([lesson, subject]) => {
+			mergeMap(([lesson, subject]) => {
 				return this.loadMedia(lesson).pipe(
 					tap(path => path && subject.next(path))
 				);
@@ -110,28 +110,25 @@ export class LessonMediaService {
 	/** @description Downloads the lesson. */
 	private downloadLesson(lesson: Lesson): Observable<string> {
 		return defer(() => {
-			console.log(`Attempting download: ${lesson.source}`);
-
 			this.downloadProgress.setProgress({
 				url: lesson.source,
 				state: DownloadState.ongoing
 			})
+
 			return new Promise<string>((resolve, reject) => {
-				this.downloader.downloadFile(lesson.source, (succeeded:boolean, uri:string) => {
+				this.downloader.downloadFile(lesson.source, (succeeded: boolean, uri: string) => {
 					this.downloadProgress.setProgress({
 						url: lesson.source,
 						state: succeeded ? DownloadState.succeeded : DownloadState.failed
 					});
-
 					if (succeeded) {
 						// #23: nativescript-downloadmanager resolves it's pseudo-promise with a URI.
 						// Here, convert to a proper system path.
 						let downloadFilePath = uri.replace("file://", "");
 						downloadFilePath = downloadFilePath.replace(/\//g, path.separator);
-						
 						resolve(downloadFilePath);
 					} else {
-						reject();
+						reject(`Download failed: ${lesson.source}`);
 					}
 				}, downloadFolderName, lesson.id);
 			})

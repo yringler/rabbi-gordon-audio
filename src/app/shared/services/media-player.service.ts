@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { TNSPlayer } from 'nativescript-audio';
 import { PlayerProgressService } from './player-progress.service';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { AppSettingsService } from './app-settings.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -11,8 +12,12 @@ export class MediaPlayerService {
 	private currentFile: string;
 	private isPlaying$: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
-	constructor(private progress: PlayerProgressService) {
+	constructor(
+		private progress: PlayerProgressService,
+		private settings: AppSettingsService
+	) {
 		this.player = new TNSPlayer();
+		this.setSpeed(this.settings.getPlaybackSpeed());
 		// #3: don't resume from pause when regains audio focus.
 		// Thank you, @masayoshiadachi (at https://github.com/nstudio/nativescript-audio/issues/148#issuecomment-490522070)
 		this.player.resume = () => {}
@@ -49,7 +54,7 @@ export class MediaPlayerService {
 	}
 
 	setSpeed(speed: number) {
-		this.player.changePlayerSpeed(speed);
+	//	this.player.changePlayerSpeed(speed);
 	}
 
 	isPlaying(): Observable<boolean> {

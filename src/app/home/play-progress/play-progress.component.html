@@ -1,5 +1,5 @@
 <Slider
-*ngIf="duration"
+*ngIf="isPlaying | async"
 minvalue="0"
 [maxvalue]="duration"
 [value]="current"

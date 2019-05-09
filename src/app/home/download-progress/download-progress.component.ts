@@ -27,6 +27,6 @@ export class DownloadProgressComponent implements OnInit {
 	}
 
 	get stateText(): string {
-		return this.currentProgress == DownloadState.failed ? "Failed!" : null;
+		return this.currentProgress == DownloadState.failed ? "Download failed" : null;
 	}
 }
