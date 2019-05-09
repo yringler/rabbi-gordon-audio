@@ -1,5 +1,2 @@
-<Progress
-*ngIf="currentProgress && currentProgress > 0 && currentProgress < 100"
-[value]="currentProgress"
-maxvalue="100"
-></Progress>
+<Label *ngIf="stateText" [text]="stateText" horizontalAlignment="center" ></Label>
+<ActivityIndicator [busy]="downloading"></ActivityIndicator>

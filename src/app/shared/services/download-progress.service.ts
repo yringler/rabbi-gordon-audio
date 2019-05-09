@@ -1,10 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Subject, Subscribable } from 'rxjs';
-import { distinct, debounceTime } from 'rxjs/operators';
+
+export enum DownloadState {
+	ongoing,
+	succeeded,
+	failed
+}
 
 export class DownloadProgress {
 	url: string;
-	progress: number;
+	state: DownloadState;
 }
 
 @Injectable({

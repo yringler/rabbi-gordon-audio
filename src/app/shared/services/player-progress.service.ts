@@ -59,7 +59,12 @@ export class PlayerProgressService {
 
 		this.player.getAudioTrackDuration().then(duration => {
 			this.duration = getSeconds(+duration);
-			
+
+			this.progress$.next({
+				current: 0,
+				duration: this.duration
+			});
+
 			let self = this;
 			this.intervalId = setInterval(() => {
 				self.progress$.next({
