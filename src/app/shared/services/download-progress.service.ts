@@ -16,15 +16,18 @@ export class DownloadProgress {
 	providedIn: 'root'
 })
 export class DownloadProgressService {
-	private progress$: Subject<DownloadProgress> = new Subject;
+	private progress$: Subject<DownloadProgress[]> = new Subject;
+	private progress: Map<string, DownloadProgress> = new Map;
 
 	constructor() { }
 
-	getProgress(): Subscribable<DownloadProgress> {
+	getProgress(): Subscribable<DownloadProgress[]> {
 		return this.progress$.asObservable();
 	}
 
 	setProgress(progress: DownloadProgress) {
-		this.progress$.next(progress);
+		this.progress.set(progress.url, progress);
+
+		this.progress$.next(Array.from(this.progress.values()));
 	}
 }

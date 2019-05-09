@@ -10,7 +10,7 @@ import { DownloadProgressService, DownloadProgress, DownloadState } from '~/app/
 export class DownloadProgressComponent implements OnInit {
 
 	/** @description How far along an ongoing download is. */
-	currentProgress: DownloadState;
+	private currentProgress: DownloadProgress[];
 
 	constructor(
 		private downloadProgress: DownloadProgressService,
@@ -18,15 +18,15 @@ export class DownloadProgressComponent implements OnInit {
 
 	ngOnInit() {
 		this.downloadProgress.getProgress().subscribe(progress => {
-			this.zone.run(() => this.currentProgress = progress.state);
+			this.zone.run(() => this.currentProgress = progress);
 		})
 	}
 
 	get downloading():boolean {
-		return this.currentProgress == DownloadState.ongoing;
+		return !!this.currentProgress.find(progress => progress.state == DownloadState.ongoing);
 	}
 
 	get stateText(): string {
-		return this.currentProgress == DownloadState.failed ? "Download failed" : null;
+		return this.currentProgress.find(progress => progress.state == DownloadState.failed) ? "Download failed" : null;
 	}
 }

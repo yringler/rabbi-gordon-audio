@@ -121,6 +121,7 @@ export class LessonMediaService {
 						url: lesson.source,
 						state: succeeded ? DownloadState.succeeded : DownloadState.failed
 					});
+					
 					if (succeeded) {
 						// #23: nativescript-downloadmanager resolves it's pseudo-promise with a URI.
 						// Here, convert to a proper system path.

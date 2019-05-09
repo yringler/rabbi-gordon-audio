@@ -54,7 +54,7 @@ export class MediaPlayerService {
 	}
 
 	setSpeed(speed: number) {
-	//	this.player.changePlayerSpeed(speed);
+		this.player.changePlayerSpeed(speed);
 	}
 
 	isPlaying(): Observable<boolean> {
