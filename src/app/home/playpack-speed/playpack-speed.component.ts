@@ -4,7 +4,7 @@ import { FormControl } from '@angular/forms';
 import { debounceTime, map, distinct } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 
-const maxSpeed = 3;
+const maxSpeed = 2;
 
 @Component({
 	selector: 'playpack-speed',
@@ -30,15 +30,14 @@ export class PlaypackSpeedComponent implements OnInit {
 			distinct(),
 			map(speed => this.getSpeedFromSliderValue(speed))
 		).subscribe(speed => {
-			console.log(speed);
 			(<any>this.player).setSpeed(speed);
 		});
 
 		this.isPlaying = this.player.isPlaying();
 	}
 
-	get currentSpeed(): number {
-		return this.getSpeedFromSliderValue(this.speed.value);
+	get currentSpeed(): string {
+		return this.getSpeedFromSliderValue(this.speed.value).toPrecision(2);
 	}
 
 	resetSpeed() {
