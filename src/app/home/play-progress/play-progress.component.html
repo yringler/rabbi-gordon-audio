@@ -1,7 +1,11 @@
-<Slider
-*ngIf="isPlaying | async"
-minvalue="0"
-[maxvalue]="duration"
-[value]="current"
-(valueChange)="updateProgress($event.object)"
-></Slider>
+<GridLayout *ngIf="isPlaying | async" columns="*,auto" rows="auto">
+	<Slider
+	*ngIf="isPlaying | async"
+	row="0" col="0"
+	minvalue="0"
+	[maxvalue]="duration"
+	[value]="current"
+	(valueChange)="updateProgress($event.object)"
+	></Slider>
+	<Button row="0" col="1" class="fas" [text]="playPauseIcon$ | async" (tap)="togglePlay()"></Button>
+</GridLayout>

@@ -48,7 +48,7 @@ export class PlayerProgressService {
 	}
 
 	seek(seconds: number) {
-		this.player.seekTo(seconds).then(() => this.progress$.next({
+		this.player && this.player.seekTo(seconds).then(() => this.progress$.next({
 			current: seconds,
 			duration: this.duration
 		}));
