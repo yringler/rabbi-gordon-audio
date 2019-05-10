@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Lesson, LessonQuery } from '../models/dailyLessons';
-import { Observable,  ReplaySubject, of, Subject, throwError, defer, concat } from 'rxjs';
-import { map, catchError, tap, mergeMap, concatMap, retry, switchMap, skipWhile, first } from 'rxjs/operators';
-import { path, knownFolders, File, } from 'tns-core-modules/file-system/file-system';
+import { Observable, ReplaySubject, of, Subject, defer } from 'rxjs';
+import { map, tap, mergeMap, switchMap, skipWhile, first } from 'rxjs/operators';
+import { path } from 'tns-core-modules/file-system/file-system';
 import { DailyLessonService } from './daily-lesson.service';
 import { MediaManifestService } from './media-manifest.service';
 import { NetworkPermissionService, PermissionReason } from './network-permission.service';
@@ -13,8 +13,7 @@ import { DownloadManager } from 'nativescript-downloadmanager';
 /**
  * @description The folder where media is downloaded to.
  */
-const downloadFolderName = "lessons-cache";
-export const downloadFolder = knownFolders.documents().getFolder(downloadFolderName).path;
+export const downloadFolderName = "lessons-cache";
 
 @Injectable({
 	providedIn: 'root'
@@ -121,25 +120,26 @@ export class LessonMediaService {
 						url: lesson.source,
 						state: succeeded ? DownloadState.succeeded : DownloadState.failed
 					});
-					
+
 					if (succeeded) {
-						// #23: nativescript-downloadmanager resolves it's pseudo-promise with a URI.
-						// Here, convert to a proper system path.
-						let downloadFilePath = uri.replace("file://", "");
-						downloadFilePath = downloadFilePath.replace(/\//g, path.separator);
-						resolve(downloadFilePath);
+						resolve(uri);
 					} else {
 						reject(`Download failed: ${lesson.source}`);
 					}
 				}, downloadFolderName, lesson.id);
 			})
 		}).pipe(
-			tap(file => console.log(`downloaded to: ${file}`)),
-			tap(file => file && this.mediaManifestService.registerItem({
-				id: lesson.id,
-				url: lesson.source,
-				path: <string>file
-			}))
+			tap(uri => console.log(`downloaded to: ${uri}`)),
+			tap(uri => {
+				let downloadFilePath = uri.replace("file://", "");
+				downloadFilePath = downloadFilePath.replace(/\//g, path.separator);
+
+				this.mediaManifestService.registerItem({
+					id: lesson.id,
+					uri: lesson.source,
+					path: downloadFilePath
+				});
+			})
 		);
 	}
 }

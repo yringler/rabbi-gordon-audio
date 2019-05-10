@@ -10,9 +10,12 @@ export class DownloadedItem {
 	id: string;
 
 	/**
-	 * @description The url where this item was downloaded from.
+	 * @description A URI which can be used to play the file. This could be either a URL on the web, or a file:// url.
+	 * 
+	 * Note that for now, this will always be a file uri; for some reason, playback is failing when it's done through
+	 * the file path property.
 	 */
-	url: string;
+	uri: string;
 
 	/**
 	 * @description The full path, including file name and extension, where the file was downloaded to.

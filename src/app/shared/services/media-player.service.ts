@@ -22,16 +22,17 @@ export class MediaPlayerService {
 		this.player.resume = () => {}
 
 		this.settings.getPlaybackSpeed$().subscribe(speed => {
-			if(this.player.isAudioPlaying()) {
+			if (this.player.isAudioPlaying()) {
 				this.player.changePlayerSpeed(speed);
 			}
 		});
 	}
 
 	play(file: string) {
+		console.log("file:" + file)
 		this.currentFile = file;
 
-		this.player.playFromFile({
+		this.player.playFromUrl({
 			audioFile: file,
 			loop: false,
 			completeCallback: () => this.isPlaying$.next(false)

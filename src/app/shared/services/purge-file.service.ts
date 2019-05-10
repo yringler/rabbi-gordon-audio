@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
-import { Observable, from, of } from 'rxjs';
-import { path, Folder, File } from 'tns-core-modules/file-system/file-system';
+import { Observable, from, of, throwError } from 'rxjs';
+import { path, Folder, File, FileSystemEntity } from 'tns-core-modules/file-system/file-system';
 import { mergeMap, map, catchError, tap } from 'rxjs/operators';
 import { zip } from 'rxjs';
 import { DailyLessonService } from './daily-lesson.service';
-import { downloadFolder } from './lesson-media.service';
 import { MediaManifestService } from './media-manifest.service';
 import { Lesson } from '../models/dailyLessons';
+import { downloadFolderName } from './lesson-media.service';
 
 /**
  * @description Check if item is contained in the array.
@@ -38,7 +38,7 @@ export class PurgeFileService {
 		let deletedFilePaths = new Array<string>();
 
 		return zip(
-			Folder.fromPath(downloadFolder).getEntities(),
+			this.getAllFilesInDownloadPath(),
 			this.getAllowedMedia()
 		).pipe(
 			// Get files to delete.
@@ -55,6 +55,27 @@ export class PurgeFileService {
 			catchError(error => {
 				console.log(`Purge error: ${error}`);
 				return of([]);
+			})
+		)
+	}
+
+	// Get the download folder from the manifest.
+	private getAllFilesInDownloadPath(): Observable<FileSystemEntity[]> {
+		return this.mediaManifestService.getManifest().pipe(
+			mergeMap(downloadItems => {
+				if (downloadItems.length < 1) {
+					return throwError("Purge fail: no files to purge/unknown download path");
+				}
+
+				const downloadPath = downloadItems[0].path;
+
+				// Make sure to only delete files in lessons-cache. There's no reason for this ever to happen, but
+				// I really don't want to delete peoples files by accident.
+				if (!downloadPath.includes(downloadFolderName)) {
+					return throwError("Hey, I was about to delete from " + downloadPath + "!");
+				}
+
+				return File.fromPath(downloadPath).parent.getEntities();
 			})
 		)
 	}
