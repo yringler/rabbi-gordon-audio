@@ -11,15 +11,22 @@ export class MediaPlayerService {
 	private player: TNSPlayer;
 	private currentFile: string;
 	private isPlaying$: BehaviorSubject<boolean> = new BehaviorSubject(false);
+	private wasPausedByUser: boolean;
 
 	constructor(
 		private progress: PlayerProgressService,
 		private settings: AppSettingsService
 	) {
 		this.player = new TNSPlayer();
+
+		let self = this;
 		// #3: don't resume from pause when regains audio focus.
 		// Thank you, @masayoshiadachi (at https://github.com/nstudio/nativescript-audio/issues/148#issuecomment-490522070)
-		this.player.resume = () => {}
+		this.player.resume = () => {
+			if (!self.wasPausedByUser) {
+				self.player.play();
+			}
+		}
 
 		this.settings.getPlaybackSpeed$().subscribe(speed => {
 			if (this.player.isAudioPlaying()) {
@@ -48,10 +55,12 @@ export class MediaPlayerService {
 		if (this.player.isAudioPlaying() && (requestedFile == null || this.currentFile == requestedFile)) {
 			this.player.pause();
 			this.progress.pause();
+			this.wasPausedByUser = true;
 		} else {
 			if (this.currentFile != null && (requestedFile == null || this.currentFile == requestedFile)) {
 				this.player.play();
 				this.progress.resume();
+				this.wasPausedByUser = false;
 			} else if (requestedFile != null) {
 				this.play(requestedFile);
 			} else {
