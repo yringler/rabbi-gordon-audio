@@ -23,6 +23,8 @@ export class MediaPlayerService {
 		// #3: don't resume from pause when regains audio focus.
 		// Thank you, @masayoshiadachi (at https://github.com/nstudio/nativescript-audio/issues/148#issuecomment-490522070)
 		this.player.resume = () => {
+			// Resume is not called in my code; it's only called by TNSPlayer on regain of audio focus.
+			// Only resume if the player wasn't paused by user.
 			if (!self.wasPausedByUser) {
 				self.player.play();
 			}
@@ -57,10 +59,11 @@ export class MediaPlayerService {
 			this.progress.pause();
 			this.wasPausedByUser = true;
 		} else {
+			this.wasPausedByUser = false;
+
 			if (this.currentFile != null && (requestedFile == null || this.currentFile == requestedFile)) {
 				this.player.play();
 				this.progress.resume();
-				this.wasPausedByUser = false;
 			} else if (requestedFile != null) {
 				this.play(requestedFile);
 			} else {
