@@ -61,7 +61,7 @@ export class PlayerProgressService {
 			this.duration = getSeconds(+duration);
 
 			this.progress$.next({
-				current: 0,
+				current: getSeconds(this.player.currentTime),
 				duration: this.duration
 			});
 

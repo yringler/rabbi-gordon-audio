@@ -17,10 +17,15 @@ export class MediaPlayerService {
 		private settings: AppSettingsService
 	) {
 		this.player = new TNSPlayer();
-		this.setSpeed(this.settings.getPlaybackSpeed());
 		// #3: don't resume from pause when regains audio focus.
 		// Thank you, @masayoshiadachi (at https://github.com/nstudio/nativescript-audio/issues/148#issuecomment-490522070)
 		this.player.resume = () => {}
+
+		this.settings.getPlaybackSpeed$().subscribe(speed => {
+			if(this.player.isAudioPlaying()) {
+				this.player.changePlayerSpeed(speed);
+			}
+		});
 	}
 
 	play(file: string) {
@@ -33,6 +38,7 @@ export class MediaPlayerService {
 		}).then(() => {
 			this.progress.watch(this.player);
 			this.isPlaying$.next(true);
+			this.player.changePlayerSpeed(this.settings.getPlaybackSpeed())
 		})
 	}
 
@@ -51,10 +57,6 @@ export class MediaPlayerService {
 				console.log("ERROR: Runtime error: can not resume when file is not being played.");
 			}
 		  }
-	}
-
-	setSpeed(speed: number) {
-		this.player.changePlayerSpeed(speed);
 	}
 
 	isPlaying(): Observable<boolean> {

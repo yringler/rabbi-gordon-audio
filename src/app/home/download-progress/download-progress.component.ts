@@ -23,10 +23,12 @@ export class DownloadProgressComponent implements OnInit {
 	}
 
 	get downloading():boolean {
-		return !!this.currentProgress.find(progress => progress.state == DownloadState.ongoing);
+		return this.currentProgress &&
+			!!this.currentProgress.find(progress => progress.state == DownloadState.ongoing);
 	}
 
 	get stateText(): string {
-		return this.currentProgress.find(progress => progress.state == DownloadState.failed) ? "Download failed" : null;
+		return this.currentProgress &&
+			this.currentProgress.find(progress => progress.state == DownloadState.failed) ? "Download failed" : null;
 	}
 }

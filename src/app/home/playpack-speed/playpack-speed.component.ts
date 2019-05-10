@@ -39,8 +39,6 @@ export class PlaypackSpeedComponent implements OnInit {
 		).subscribe(speed => {
 			// Save the speed setting.
 			this.settings.setSetting(StudyAppSettingTypes.playbackSpeed, speed);
-			// Set the speed.
-			(<any>this.player).setSpeed(speed);
 		});
 
 		this.isPlaying = this.player.isPlaying();
