@@ -1,11 +1,14 @@
 import { Injectable } from '@angular/core';
 import { getJSON } from "tns-core-modules/http";
 import { DailyStudyLibrary, DailyLessonTrack } from '../models/dailyLessons';
-import { Observable, from, concat, BehaviorSubject, ReplaySubject, throwError } from 'rxjs';
-import { map, tap, catchError } from 'rxjs/operators';
-import { knownFolders, File, path } from 'tns-core-modules/file-system/file-system';
+import { Observable, from, ReplaySubject, throwError, concat, of } from 'rxjs';
+import { map, tap, catchError, mergeMap } from 'rxjs/operators';
+import { knownFolders, File } from 'tns-core-modules/file-system/file-system';
+import { getString, setString } from 'tns-core-modules/application-settings/application-settings';
+import { currentAppVersion } from './app-settings.service';
 
-const lessonApiUrl: string = 'https://lesson-api.herokuapp.com/';
+const lessonApiUrl = 'https://lesson-api.herokuapp.com/';
+const lessonManifestVersionSetting = "lesson-meta-version";
 
 function ensureHasDates(tracks: DailyLessonTrack[]): DailyLessonTrack[] {
 	return tracks.map(track => {
@@ -52,10 +55,16 @@ export class DailyLessonService {
 			// Try to load from file.
 			from(getFile().readText()).pipe(
 				map(json => parseLibrary(json)),
-				// Make sure that file is up to date.
+				// Make sure that file is up to date and of current app version.
 				tap(library => {
 					if (!library.has({ date: 2 })) {
-						return throwError("Manifest doesn't have required dates.");
+						throw "Manifest doesn't have required dates.";
+					}
+					
+					if (getString(lessonManifestVersionSetting, "") !== currentAppVersion) {
+						getFile().removeSync();
+						console.log("old lesson meta deleted");
+						throw "Manifest created on older app version.";
 					}
 				}),
 	
@@ -67,6 +76,10 @@ export class DailyLessonService {
 						tap(tracks => ensureHasDates(<DailyLessonTrack[]>tracks)),
 						// Save it to file.
 						tap(tracks => this.saveJson(JSON.stringify(tracks))),
+						// Update the app version which created the file.
+						tap(() => {
+							setString(lessonManifestVersionSetting, currentAppVersion);
+						}),
 						// Convert it to a library.
 						map(tracks => new DailyStudyLibrary(tracks))
 					)

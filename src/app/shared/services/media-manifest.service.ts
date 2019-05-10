@@ -2,6 +2,10 @@ import { Injectable } from '@angular/core';
 import { Observable, from, ReplaySubject, of, interval } from 'rxjs';
 import { knownFolders } from 'tns-core-modules/file-system/file-system';
 import { concatMap, map, catchError, first, debounce, } from 'rxjs/operators';
+import { setString, getString } from 'tns-core-modules/application-settings/application-settings';
+import { currentAppVersion } from './app-settings.service';
+
+const manifestVersionSetting = "manifest-version";
 
 /**
  * @description An item which was fully downloaded.
@@ -39,9 +43,16 @@ export class MediaManifestService {
 		this.downloadManifest$.pipe(
 			debounce(() => interval(250)),
 			concatMap(manifest => {
-				return self.manifestFile.writeText(JSON.stringify(manifest));
+				return self.manifestFile.writeText(JSON.stringify(manifest)).then(() => {
+					setString(manifestVersionSetting, currentAppVersion);
+				});
 			})
 		).subscribe()
+
+		if (getString(manifestVersionSetting, "") !== currentAppVersion) {
+			self.manifestFile.removeSync();
+			console.log("old download manifest deleted");
+		}
 
 		// Seed the manifest from saved contents of file.
 		from(self.manifestFile.readText()).pipe(

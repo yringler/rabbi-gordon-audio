@@ -4,6 +4,12 @@ import { BehaviorSubject, Observable } from 'rxjs';
 
 export enum StudyAppSettingTypes { playbackSpeed };
 
+/** @description
+ * Current version of the app. Used to make sure that generated files were generated with
+ * a valid version of the app.
+ */
+export const currentAppVersion = "2.1";
+
 let settingIds = {
 	playbackSpeed: "playbackSpeed"
 };
