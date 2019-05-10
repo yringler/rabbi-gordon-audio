@@ -1,8 +1,9 @@
 import { Component, OnInit, NgZone } from '@angular/core';
 import { PlayerProgressService } from '~/app/shared/services/player-progress.service';
 import { Slider } from "tns-core-modules/ui/slider"
-import { MediaPlayerService } from '~/app/shared/services/media-player.service';
+import { MediaPlayerService, PlaybackState } from '~/app/shared/services/media-player.service';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
 	selector: 'play-progress',
@@ -25,6 +26,8 @@ export class PlayProgressComponent implements OnInit {
 
 	isPlaying: Observable<boolean>;
 
+	playPauseIcon$: Observable<string>;
+
 	constructor(
 		private playerProgress: PlayerProgressService,
 		private player: MediaPlayerService,
@@ -43,6 +46,13 @@ export class PlayProgressComponent implements OnInit {
 			});
 		
 		this.isPlaying = this.player.isPlaying();
+
+		this.playPauseIcon$ = this.player.playState().pipe(
+			map(state => {
+				let value = String.fromCharCode(state == PlaybackState.playing ? 0xf04c : 0xf04b);
+				return value;
+			})
+		);
 	}
 
 	updateProgress(slider: Slider) {
@@ -52,5 +62,9 @@ export class PlayProgressComponent implements OnInit {
 		}
 
 		this.playerProgress.seek(slider.value);
+	}
+
+	togglePlay() {
+		this.player.toggle();
 	}
 }

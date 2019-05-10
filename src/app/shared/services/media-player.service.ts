@@ -3,6 +3,13 @@ import { TNSPlayer } from 'nativescript-audio';
 import { PlayerProgressService } from './player-progress.service';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AppSettingsService } from './app-settings.service';
+import { map } from 'rxjs/operators';
+
+export enum PlaybackState {
+	stopped,
+	playing,
+	paused
+}
 
 @Injectable({
 	providedIn: 'root'
@@ -10,7 +17,7 @@ import { AppSettingsService } from './app-settings.service';
 export class MediaPlayerService {
 	private player: TNSPlayer;
 	private currentFile: string;
-	private isPlaying$: BehaviorSubject<boolean> = new BehaviorSubject(false);
+	private playState$: BehaviorSubject<PlaybackState> = new BehaviorSubject(PlaybackState.stopped);
 	private wasPausedByUser: boolean;
 
 	constructor(
@@ -38,28 +45,29 @@ export class MediaPlayerService {
 	}
 
 	play(file: string) {
-		console.log("file:" + file)
 		this.currentFile = file;
 
 		this.player.playFromUrl({
 			audioFile: file,
 			loop: false,
-			completeCallback: () => this.isPlaying$.next(false)
+			completeCallback: () => this.playState$.next(PlaybackState.stopped)
 		}).then(() => {
 			this.progress.watch(this.player);
-			this.isPlaying$.next(true);
+			this.playState$.next(PlaybackState.playing);
 			this.player.changePlayerSpeed(this.settings.getPlaybackSpeed())
 		})
 	}
 
 	// Toggle player. If a path is passed in, makes sure that file is playing.
-	toggle(requestedFile ?:string) {
+	toggle(requestedFile?: string) {
 		if (this.player.isAudioPlaying() && (requestedFile == null || this.currentFile == requestedFile)) {
 			this.player.pause();
 			this.progress.pause();
+			this.playState$.next(PlaybackState.paused);
 			this.wasPausedByUser = true;
 		} else {
 			this.wasPausedByUser = false;
+			this.playState$.next(PlaybackState.playing);
 
 			if (this.currentFile != null && (requestedFile == null || this.currentFile == requestedFile)) {
 				this.player.play();
@@ -69,10 +77,16 @@ export class MediaPlayerService {
 			} else {
 				console.log("ERROR: Runtime error: can not resume when file is not being played.");
 			}
-		  }
+		}
 	}
 
 	isPlaying(): Observable<boolean> {
-		return this.isPlaying$.asObservable();
+		return this.playState$.pipe(
+			map(state => state != PlaybackState.stopped)
+		);
+	}
+
+	playState(): Observable<PlaybackState> {
+		return this.playState$;
 	}
 }
