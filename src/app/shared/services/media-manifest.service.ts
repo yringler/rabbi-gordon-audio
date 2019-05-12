@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, from, ReplaySubject, of, interval } from 'rxjs';
-import { knownFolders } from 'tns-core-modules/file-system/file-system';
+import { knownFolders, File } from 'tns-core-modules/file-system/file-system';
 import { concatMap, map, catchError, first, debounce, } from 'rxjs/operators';
 import { setString, getString } from 'tns-core-modules/application-settings/application-settings';
 import { currentAppVersion } from './app-settings.service';
@@ -62,7 +62,11 @@ export class MediaManifestService {
 			// If the json parsing fails (e.g. if the file is empty)
 			// return an empty array.
 			catchError(() => of([]))
-		).subscribe(manifest => {
+		).subscribe((manifest:DownloadedItem[]) => {
+			// Now that the files are downloaded to a user accessible
+			// folder, make sure that the manifest is accurate.
+			manifest =  manifest.filter(item => File.exists(item.path))
+
 			self.downloadManifest.push(...manifest);
 			self.downloadManifest$.next(self.downloadManifest);
 		});

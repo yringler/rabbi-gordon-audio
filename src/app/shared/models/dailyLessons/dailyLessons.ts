@@ -14,6 +14,12 @@ export enum DailyLessonType {
  */
 export class Lesson {
 	date: Date;
+	/** @description
+	 * The source of the lesson. 
+	 * 
+	 * @deprecated Currently, this should not be used 
+	 * to download the lesson because of authentication issues.
+	 */
 	source: string;
 	title: string;
 	id: string;
