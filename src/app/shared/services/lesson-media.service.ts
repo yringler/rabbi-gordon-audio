@@ -1,19 +1,22 @@
 import { Injectable } from '@angular/core';
-import { Lesson, LessonQuery } from '../models/dailyLessons';
+import { Lesson, LessonQuery, DailyLessonTrack } from '../models/dailyLessons';
 import { Observable, ReplaySubject, of, Subject, defer } from 'rxjs';
-import { map, tap, mergeMap, switchMap, skipWhile, first } from 'rxjs/operators';
+import { map, tap, mergeMap, switchMap, skipWhile, first, multicast, refCount, publishLast } from 'rxjs/operators';
 import { path } from 'tns-core-modules/file-system/file-system';
 import { DailyLessonService } from './daily-lesson.service';
 import { MediaManifestService } from './media-manifest.service';
 import { NetworkPermissionService, PermissionReason } from './network-permission.service';
 import { DownloadProgressService, DownloadState } from './download-progress.service';
 import { DownloadManager } from 'nativescript-downloadmanager';
+import { HttpClient } from '@angular/common/http';
 
 
 /**
  * @description The folder where media is downloaded to.
  */
 export const downloadFolderName = "lessons-cache";
+
+const lessonSourceApiUrl = 'https://lesson-api.herokuapp.com/';
 
 @Injectable({
 	providedIn: 'root'
@@ -22,12 +25,14 @@ export class LessonMediaService {
 	private files: Map<string, ReplaySubject<string>> = new Map();
 	private loadRequest$: Subject<[Lesson, Subject<string>]> = new Subject;
 	private downloader: DownloadManager
+	private lessonSource$:Observable<Map<string, string>>;
 
 	constructor(
 		private dailyLessonService: DailyLessonService,
 		private mediaManifestService: MediaManifestService,
 		private networkPermissionService: NetworkPermissionService,
-		private downloadProgress: DownloadProgressService
+		private downloadProgress: DownloadProgressService,
+		private http:HttpClient
 	) {
 		// #11, #12: The current downloader seems to have issues with concurrent downloads.
 		// so wait until all pending downloads are completed before doing the next one.
@@ -40,6 +45,21 @@ export class LessonMediaService {
 		).subscribe();
 
 		this.downloader = new DownloadManager();
+
+		this.lessonSource$ = this.http.get<DailyLessonTrack[]>(lessonSourceApiUrl).pipe(
+			tap(() => console.log("http media source called.")),
+			map(tracks => {
+			  let map: Map<string,string> = new Map;
+			  
+			  tracks.forEach(track => {
+				track.days.forEach(day => map.set(day.id, day.source))
+			  });
+	  
+			  return map;
+			}),
+			publishLast(),
+			refCount()
+		);
 	}
 
 	/**
@@ -108,27 +128,29 @@ export class LessonMediaService {
 
 	/** @description Downloads the lesson. */
 	private downloadLesson(lesson: Lesson): Observable<string> {
-		return defer(() => {
-			this.downloadProgress.setProgress({
-				url: lesson.source,
-				state: DownloadState.ongoing
-			})
-
-			return new Promise<string>((resolve, reject) => {
-				this.downloader.downloadFile(lesson.source, (succeeded: boolean, uri: string) => {
-					this.downloadProgress.setProgress({
-						url: lesson.source,
-						state: succeeded ? DownloadState.succeeded : DownloadState.failed
-					});
-
-					if (succeeded) {
-						resolve(uri);
-					} else {
-						reject(`Download failed: ${lesson.source}`);
-					}
-				}, downloadFolderName, lesson.id);
-			})
-		}).pipe(
+		return this.lessonSource$.pipe(
+			map(sources => sources.get(lesson.id)),
+			mergeMap(source => {
+				this.downloadProgress.setProgress({
+					url: source,
+					state: DownloadState.ongoing
+				})
+	
+				return new Promise<string>((resolve, reject) => {
+					this.downloader.downloadFile(source, (succeeded: boolean, uri: string) => {
+						this.downloadProgress.setProgress({
+							url: source,
+							state: succeeded ? DownloadState.succeeded : DownloadState.failed
+						});
+	
+						if (succeeded) {
+							resolve(uri);
+						} else {
+							reject(`Download failed: ${source}`);
+						}
+					}, downloadFolderName, lesson.id);
+				})
+			}),
 			tap(uri => console.log(`downloaded to: ${uri}`)),
 			tap(uri => {
 				let downloadFilePath = uri.replace("file://", "");
@@ -136,7 +158,7 @@ export class LessonMediaService {
 
 				this.mediaManifestService.registerItem({
 					id: lesson.id,
-					uri: lesson.source,
+					uri: uri,
 					path: downloadFilePath
 				});
 			})

@@ -1,6 +1,7 @@
 import { NgModule, NO_ERRORS_SCHEMA } from "@angular/core";
 import { NativeScriptCommonModule } from "nativescript-angular/common";
 import {NativeScriptFormsModule} from "nativescript-angular/forms"
+import { NativeScriptHttpClientModule } from "nativescript-angular/http-client";
 import { ReactiveFormsModule } from "@angular/forms";
 import { HomeRoutingModule } from "./home-routing.module";
 import { HomeComponent } from "./home.component";
@@ -14,7 +15,8 @@ import { PlaypackSpeedComponent } from './playpack-speed/playpack-speed.componen
         NativeScriptCommonModule,
 		HomeRoutingModule,
 		NativeScriptFormsModule,
-		ReactiveFormsModule
+        ReactiveFormsModule,
+        NativeScriptHttpClientModule
     ],
     declarations: [
         HomeComponent,
