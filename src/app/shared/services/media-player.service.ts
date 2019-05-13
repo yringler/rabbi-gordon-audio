@@ -19,6 +19,11 @@ export class MediaPlayerService {
 	private currentFile: string;
 	private playState$: BehaviorSubject<PlaybackState> = new BehaviorSubject(PlaybackState.stopped);
 	private wasPausedByUser: boolean;
+	/**
+	 * @description Keep track of wether the player has been initialized to a file yet.
+	 * The speed can only be changed after it has been.
+	 */
+	private playerWasInitialized: boolean;
 
 	constructor(
 		private progress: PlayerProgressService,
@@ -38,7 +43,7 @@ export class MediaPlayerService {
 		}
 
 		this.settings.getPlaybackSpeed$().subscribe(speed => {
-			if (this.player.isAudioPlaying()) {
+			if (this.playerWasInitialized) {
 				this.player.changePlayerSpeed(speed);
 			}
 		});
@@ -52,9 +57,11 @@ export class MediaPlayerService {
 			loop: false,
 			completeCallback: () => this.playState$.next(PlaybackState.stopped)
 		}).then(() => {
+			this.wasPausedByUser = false;
+			this.playerWasInitialized = true;
 			this.progress.watch(this.player);
 			this.playState$.next(PlaybackState.playing);
-			this.player.changePlayerSpeed(this.settings.getPlaybackSpeed())
+			this.player.changePlayerSpeed(this.settings.getPlaybackSpeed());
 		})
 	}
 

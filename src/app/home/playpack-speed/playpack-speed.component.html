@@ -1,5 +1,5 @@
 <GridLayout *ngIf="this.isPlaying | async" columns="*,auto,auto" rows="auto">
 	<Slider row="0" col="0" [minvalue]="minValue" [maxvalue]="maxValue" [formControl]="speed"></Slider>
 	<Label row="0" col="1" class="p-y-10 p-r-10" [text]="currentSpeed + 'x'"></Label>
-	<Button row="0" col="2" text="Reset" (tap)="resetSpeed()"></Button>
+	<Button row="0" col="2" text="1x" (tap)="resetSpeed()"></Button>
 </GridLayout>
