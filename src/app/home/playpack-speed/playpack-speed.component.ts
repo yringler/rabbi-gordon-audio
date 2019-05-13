@@ -34,7 +34,6 @@ export class PlaypackSpeedComponent implements OnInit {
 		this.speed.valueChanges.pipe(
 			// Map to speed.
 			debounceTime(250),
-			distinct(),
 			map(speed => this.getSpeedFromSliderValue(speed))
 		).subscribe(speed => {
 			// Save the speed setting.
