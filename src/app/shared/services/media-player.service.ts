@@ -55,7 +55,10 @@ export class MediaPlayerService {
 		this.player.playFromUrl({
 			audioFile: file,
 			loop: false,
-			completeCallback: () => this.playState$.next(PlaybackState.stopped)
+			completeCallback: () => {
+				this.wasPausedByUser = true;
+				this.playState$.next(PlaybackState.stopped);
+			}
 		}).then(() => {
 			this.wasPausedByUser = false;
 			this.playerWasInitialized = true;
