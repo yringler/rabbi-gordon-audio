@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {hasKey, getNumber, setNumber} from "tns-core-modules/application-settings";
 import { BehaviorSubject, Observable } from 'rxjs';
+import {profile } from "tns-core-modules/profiling"
 
 export enum StudyAppSettingTypes { playbackSpeed };
 

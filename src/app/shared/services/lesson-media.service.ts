@@ -9,6 +9,7 @@ import { NetworkPermissionService, PermissionReason } from './network-permission
 import { DownloadProgressService, DownloadState } from './download-progress.service';
 import { DownloadManager } from 'nativescript-downloadmanager';
 import { HttpClient } from '@angular/common/http';
+import { profile } from 'tns-core-modules/profiling/profiling';
 
 
 /**
@@ -46,20 +47,7 @@ export class LessonMediaService {
 
 		this.downloader = new DownloadManager();
 
-		this.lessonSource$ = this.http.get<DailyLessonTrack[]>(lessonSourceApiUrl).pipe(
-			tap(() => console.log("http media source called.")),
-			map(tracks => {
-			  let map: Map<string,string> = new Map;
-			  
-			  tracks.forEach(track => {
-				track.days.forEach(day => map.set(day.id, day.source))
-			  });
-	  
-			  return map;
-			}),
-			publishLast(),
-			refCount()
-		);
+		this.lessonSource$ = this.getLessonSource();
 	}
 
 	/**
@@ -162,6 +150,24 @@ export class LessonMediaService {
 					path: downloadFilePath
 				});
 			})
+		);
+	}
+	
+	@profile()
+	private getLessonSource():Observable<Map<string, string>> {
+		return this.http.get<DailyLessonTrack[]>(lessonSourceApiUrl).pipe(
+			tap(() => console.log("http media source called.")),
+			map(tracks => {
+			  let map: Map<string,string> = new Map;
+			  
+			  tracks.forEach(track => {
+				track.days.forEach(day => map.set(day.id, day.source))
+			  });
+	  
+			  return map;
+			}),
+			publishLast(),
+			refCount()
 		);
 	}
 }

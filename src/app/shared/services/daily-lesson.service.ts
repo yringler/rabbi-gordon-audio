@@ -6,6 +6,7 @@ import { map, tap, catchError, mergeMap } from 'rxjs/operators';
 import { knownFolders, File } from 'tns-core-modules/file-system/file-system';
 import { getString, setString } from 'tns-core-modules/application-settings/application-settings';
 import { currentAppVersion } from './app-settings.service';
+import { profile } from 'tns-core-modules/profiling/profiling';
 
 const lessonApiUrl = 'https://lesson-api.herokuapp.com/';
 const lessonManifestVersionSetting = "lesson-meta-version";
@@ -36,6 +37,7 @@ function getFile(): File {
 export class DailyLessonService {
 	private library$: ReplaySubject<DailyStudyLibrary>;
 
+	@profile()
 	getLibrary(): ReplaySubject<DailyStudyLibrary> {
 
 		// Try to load from memory.
