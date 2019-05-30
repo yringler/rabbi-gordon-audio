@@ -21,6 +21,8 @@ export class Lesson {
 	 * to download the lesson because of authentication issues.
 	 */
 	source: string;
+	/** @description The length of the class, in seconds. */
+	duration: number;
 	title: string;
 	id: string;
 }
