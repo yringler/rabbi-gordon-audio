@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ReplaySubject, Observable } from 'rxjs';
-import { TNSPlayer } from 'nativescript-audio';
+import { TNSPlayer } from 'nativescript-will';
 import { isIOS, isAndroid } from 'tns-core-modules/ui/page/page';
 
 export class PlayerProgress {

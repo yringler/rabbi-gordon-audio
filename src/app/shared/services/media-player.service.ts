@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { TNSPlayer } from 'nativescript-audio';
+import { TNSPlayer } from 'nativescript-will';
 import { PlayerProgressService } from './player-progress.service';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AppSettingsService } from './app-settings.service';

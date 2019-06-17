@@ -13,8 +13,34 @@ android {
   defaultConfig {
     minSdkVersion 17
     generatedDensities = []
+    ndk {
+      abiFilters.clear()
+    }
   }
   aaptOptions {
     additionalParameters "--no-version-vectors"
   }
+  splits {
+    abi {
+      enable true //enables the ABIs split mechanism
+      universalApk true
+    }
+  }
+
+  sourceSets {
+    main {
+        jniLibs.srcDirs = ["$projectDir/libs/jni", "$projectDir/snapshot-build/build/ndk-build/libs"]
+    }
+  }
+}
+
+project.ext.abiCodes = ['armeabi-v7a': 1, 'arm64-v8a': 2, 'x86': 3]
+
+android.applicationVariants.all { variant ->
+    variant.outputs.each { output ->
+        def baseAbiVersionCode = project.ext.abiCodes.get(output.getFilter("ABI"), 0)
+        if (baseAbiVersionCode != null) {
+            output.versionCodeOverride = baseAbiVersionCode * 10000000 + variant.versionCode
+        }
+    }
 }

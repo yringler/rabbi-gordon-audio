@@ -23,14 +23,14 @@
     "@angular/router": "8.0.0",
     "date-fns": "^1.30.1",
     "nativescript-angular": "^8.0.0",
-    "nativescript-audio": "^5.0.1",
     "nativescript-downloadmanager": "^0.1.0",
     "nativescript-theme-core": "~1.0.4",
+    "nativescript-will": "^5.0.8",
     "reflect-metadata": "~0.1.12",
     "rxjs": "^6.3.3",
     "tns-core-modules": "^5.4.1",
-    "zone.js": "^0.8.4",
-    "typescript": "~3.4.5"
+    "typescript": "~3.4.5",
+    "zone.js": "^0.8.4"
   },
   "devDependencies": {
     "@angular/compiler-cli": "8.0.0",

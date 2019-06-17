@@ -322,6 +322,7 @@ module.exports = env => {
             ],
             projectRoot,
             webpackConfig: config,
+	    androidNdkPath: `${env.ANDROID_HOME}/ndk_manual/android-ndk-r17c`
         }));
     }
 
