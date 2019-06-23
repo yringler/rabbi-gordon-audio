@@ -4,6 +4,7 @@ import { Slider } from "tns-core-modules/ui/slider"
 import { MediaPlayerService, PlaybackState } from '~/app/shared/services/media-player.service';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { durationToString } from '~/app/shared/utils/duration';
 
 @Component({
 	selector: 'play-progress',
@@ -66,5 +67,14 @@ export class PlayProgressComponent implements OnInit {
 
 	togglePlay() {
 		this.player.toggle();
+	}
+
+	get progressText(): Observable<string> {
+		return this.playerProgress.getProgress().pipe(
+			map(progress => {
+				let timeLeft = progress.duration - progress.current;
+				return durationToString(progress.current) + '/' + durationToString(timeLeft);
+			})
+		)
 	}
 }

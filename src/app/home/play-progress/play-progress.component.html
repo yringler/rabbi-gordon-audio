@@ -1,4 +1,4 @@
-<GridLayout *ngIf="isPlaying | async" columns="*,auto" rows="auto">
+<GridLayout *ngIf="isPlaying | async" columns="*,auto,auto" rows="auto">
 	<Slider
 	*ngIf="isPlaying | async"
 	row="0" col="0"
@@ -7,5 +7,7 @@
 	[value]="current"
 	(valueChange)="updateProgress($event.object)"
 	></Slider>
-	<Button row="0" col="1" class="fas" [text]="playPauseIcon$ | async" (tap)="togglePlay()"></Button>
+	<Label row="0" col="1" [text]="progressText | async">
+	</Label>
+	<Button row="0" col="2" class="fas" [text]="playPauseIcon$ | async" (tap)="togglePlay()"></Button>
 </GridLayout>

@@ -2,6 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { DailyLessonTrack, Lesson } from '~/app/shared/models/dailyLessons';
 import { MediaPlayerService } from '~/app/shared/services/media-player.service';
 import { LessonMediaService } from '~/app/shared/services/lesson-media.service';
+import { durationToString } from '~/app/shared/utils/duration';
 
 @Component({
 	selector: 'daily-lesson',
@@ -30,6 +31,10 @@ export class DailyLessonComponent implements OnInit {
 
 	get lesson(): Lesson {
 		return this.track.days[0];
+	}
+
+	get title(): string {
+		return this.track.title  + ' | ' + durationToString(this.lesson.duration);
 	}
 
 	ngOnInit() {
