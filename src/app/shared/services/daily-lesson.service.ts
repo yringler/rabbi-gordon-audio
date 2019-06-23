@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { getJSON } from "tns-core-modules/http";
 import { DailyStudyLibrary, DailyLessonTrack } from '../models/dailyLessons';
-import { Observable, from, ReplaySubject, throwError, concat, of } from 'rxjs';
+import { Observable, from, ReplaySubject, throwError, concat, of, ObservableInput } from 'rxjs';
 import { map, tap, catchError, mergeMap } from 'rxjs/operators';
 import { knownFolders, File } from 'tns-core-modules/file-system/file-system';
 import { getString, setString } from 'tns-core-modules/application-settings/application-settings';
@@ -61,6 +61,9 @@ export class DailyLessonService {
 				tap(library => {
 					if (!library.has({ date: 2 })) {
 						throw "Manifest doesn't have required dates.";
+					} else if (!library.has({date: 5})) {
+						// Download library way in advance, so that there isn't ever a long blank screen.
+						this.downloadManifest().subscribe();
 					}
 					
 					if (getString(lessonManifestVersionSetting, "") !== currentAppVersion) {
@@ -74,21 +77,23 @@ export class DailyLessonService {
 				catchError((e) => {
 					console.log(`Not loading from file: ${e}`);
 	
-					return from(getJSON<DailyLessonTrack[]>(lessonApiUrl)).pipe(
-						tap(tracks => ensureHasDates(<DailyLessonTrack[]>tracks)),
-						// Save it to file.
-						tap(tracks => this.saveJson(JSON.stringify(tracks))),
-						// Update the app version which created the file.
-						tap(() => {
-							setString(lessonManifestVersionSetting, currentAppVersion);
-						}),
-						// Convert it to a library.
-						map(tracks => new DailyStudyLibrary(tracks))
-					)
+					return this.downloadManifest()
 				})
 			);
 	
 		return manifest$;
+	}
+
+	private downloadManifest(): Observable<DailyStudyLibrary> {
+		return from(getJSON<DailyLessonTrack[]>(lessonApiUrl)).pipe(tap(tracks => ensureHasDates(<DailyLessonTrack[]>tracks)),
+			// Save it to file.
+			tap(tracks => this.saveJson(JSON.stringify(tracks))),
+			// Update the app version which created the file.
+			tap(() => {
+				setString(lessonManifestVersionSetting, currentAppVersion);
+			}),
+			// Convert it to a library.
+			map(tracks => new DailyStudyLibrary(tracks)));
 	}
 
 	private async saveJson(json: string) {
