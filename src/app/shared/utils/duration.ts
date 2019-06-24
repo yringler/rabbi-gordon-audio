@@ -10,15 +10,17 @@ export function durationToString(seconds: number): string {
     seconds -= hours * secondsInHour;
 
     const minutes = Math.floor(seconds / secondsInMinute);
-    seconds -= minutes * secondsInHour;
+    seconds -= minutes * secondsInMinute;
 
-    let durationParts:number[] = [];
+    seconds = Math.floor(seconds); 
 
-    for (var part of [hours, minutes, seconds]) {
-        if (part > 0) {
-            durationParts.push(part);
-        }
+    let durationString = "";
+    
+    if (hours > 0) {
+        durationString += hours + ":";
     }
 
-    return durationParts.join(':');
+     durationString += minutes + ":" + seconds;
+
+     return durationString;
 }

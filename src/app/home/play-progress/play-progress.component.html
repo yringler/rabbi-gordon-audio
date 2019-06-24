@@ -7,7 +7,7 @@
 	[value]="current"
 	(valueChange)="updateProgress($event.object)"
 	></Slider>
-	<Label row="0" col="1" [text]="progressText | async">
+	<Label row="0" col="1" class="p-y-10 p-r-10" [text]="progressText | async">
 	</Label>
 	<Button row="0" col="2" class="fas" [text]="playPauseIcon$ | async" (tap)="togglePlay()"></Button>
 </GridLayout>
